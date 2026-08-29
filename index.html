@@ -779,8 +779,6 @@
             .receipt-paper table th { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             @page { margin: 8mm; }
         }
-    </style>
-
         /* ============================================================
            إضافات تنسيقية للأقسام المستوردة من الإصدار السابق
            ============================================================ */
@@ -812,7 +810,8 @@
         .debt-cell { color: var(--danger); font-weight: 900; }
         .paid-cell { color: var(--secondary); font-weight: 900; }
         .profit-value { font-weight: 900; font-variant-numeric: tabular-nums; }
-
+        @media (max-width: 900px){ .payments-timeline{grid-template-columns:1fr 1fr} }
+    </style>
 </head>
 <body>
 
@@ -1031,7 +1030,7 @@
                         <div id="dash-best"></div>
                     </div>
                     <div class="card">
-                        <div class="card-header"><h3>🧾 آخر النشاطات (سجل التدقيق)</h3><button class="btn btn-xs btn-ghost" onclick="switchSection('tab-admin'); setTimeout(()=>document.getElementById('auditBox')?.scrollIntoView({behavior:'smooth'}),120)">الكل</button></div>
+                        <div class="card-header"><h3>🧾 آخر النشاطات (سجل التدقيق)</h3><button class="btn btn-xs btn-ghost" onclick="switchSection('tab-admin'); setTimeout(function(){ document.getElementById('auditBox')?.scrollIntoView({behavior:'smooth'}); },120)">الكل</button></div>
                         <div id="dash-activity" class="timeline"></div>
                     </div>
                 </div>

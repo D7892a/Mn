@@ -1,0 +1,27 @@
+{
+  "name": "معرض المصطفى للأجهزة المنزلية — نظام الإدارة",
+  "short_name": "نظام المعرض",
+  "description": "نظام شامل لإدارة معارض الأجهزة المنزلية: نقاط بيع، مخزون، أقساط، ضمان وصيانة، خزينة وتقارير — يعمل بدون إنترنت.",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0f172a",
+  "theme_color": "#1e3a8a",
+  "categories": ["business", "productivity", "finance"],
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    { "name": "فاتورة بيع جديدة", "url": "./index.html#tab-pos", "icons": [{ "src": "icon.svg", "sizes": "any" }] },
+    { "name": "الأقساط والديون", "url": "./index.html#tab-installments", "icons": [{ "src": "icon.svg", "sizes": "any" }] },
+    { "name": "التقارير", "url": "./index.html#tab-reports", "icons": [{ "src": "icon.svg", "sizes": "any" }] }
+  ]
+}

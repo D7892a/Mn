@@ -1,5 +1,5 @@
 /* Service Worker — يخزّن النظام ليعمل بدون إنترنت (يُستخدم فقط عند تشغيل الموقع عبر خادم محلي أو استضافة) */
-const CACHE = 'mst-pos-v3.0';
+const CACHE = 'mst-pos-v3.1';
 const ASSETS = ['./', './index.html', './manifest.webmanifest', './icon.svg'];
 
 self.addEventListener('install', (e) => {
@@ -20,7 +20,23 @@ self.addEventListener('fetch', (e) => {
     const url = new URL(req.url);
     const sameOrigin = url.origin === self.location.origin;
 
-    // طلبات الصفحة/الأصول المحلية: الكاش أولًا ثم الشبكة (لأقصى سرعة وعمل أوفلاين)
+    // صفحة التطبيق نفسها (index.html): الشبكة أولًا حتى تصل آخر التحديثات فورًا، والكاش احتياط عند انقطاع النت
+    if (sameOrigin && (req.mode === 'navigate' || url.pathname.endsWith('/') || url.pathname.endsWith('.html'))) {
+        e.respondWith(
+            fetch(req)
+                .then((res) => {
+                    if (res && res.ok) {
+                        const clone = res.clone();
+                        caches.open(CACHE).then((c) => c.put(req, clone));
+                    }
+                    return res;
+                })
+                .catch(() => caches.match(req, { ignoreSearch: true }).then((hit) => hit || caches.match('./index.html')))
+        );
+        return;
+    }
+
+    // بقية الأصول المحلية: الكاش أولًا ثم الشبكة
     if (sameOrigin) {
         e.respondWith(
             caches.match(req, { ignoreSearch: true }).then((hit) => {

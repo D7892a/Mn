@@ -1157,8 +1157,16 @@
                                         <label>اسم الكفيل</label>
                                         <input type="text" id="posGuarantor" placeholder="الاسم + الهاتف">
                                     </div>
+                                    <div class="form-group">
+                                        <label>ربح/زيادة التقسيط (المبلغ)</label>
+                                        <input type="number" id="posInstFeeAmt" value="0" min="0" step="250" oninput="posFeeAmtChanged()">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>نسبة الزيادة ٪ (من الصافي)</label>
+                                        <input type="number" id="posInstFeePct" value="0" min="0" step="0.1" oninput="posFeePctChanged()">
+                                    </div>
                                     <div class="form-group full-width">
-                                        <div class="muted">القسط الشهري: <b class="num" id="posMonthly">0</b> — إجمالي الدين: <b class="num" id="posDebt">0</b></div>
+                                        <div class="muted">القسط الشهري: <b class="num" id="posMonthly">0</b> — إجمالي الدين: <b class="num" id="posDebt">0</b> — الزيادة: <b class="num" id="posFeeShow">0</b></div>
                                     </div>
                                 </div>
                             </div>
@@ -1270,6 +1278,14 @@
                                 <div class="form-group">
                                     <label>الكفيل</label>
                                     <input type="text" id="inst_guarantor" placeholder="مثال: أحمد عبد الله 07801234567">
+                                </div>
+                                <div class="form-group">
+                                    <label>ربح/زيادة التقسيط (المبلغ)</label>
+                                    <input type="number" id="inst_feeAmt" value="0" min="0" step="250" oninput="ssFeeAmtChanged()">
+                                </div>
+                                <div class="form-group">
+                                    <label>نسبة الزيادة ٪ (من السعر)</label>
+                                    <input type="number" id="inst_feePct" value="0" min="0" step="0.1" oninput="ssFeePctChanged()">
                                 </div>
                             </div>
                         </div>
@@ -1593,8 +1609,9 @@
                         <option value="done">مسددة بالكامل ✅</option>
                     </select>
                     <select id="instSort" onchange="renderInstallmentsTable()">
+                        <option value="strong">ترتيب: الأقوى ديناً أولاً ⭐</option>
                         <option value="due">ترتيب: الأقرب استحقاقاً</option>
-                        <option value="debt">ترتيب: الأعلى ديناً</option>
+                        <option value="debt">ترتيب: الأعلى متبقياً</option>
                         <option value="name">ترتيب: اسم الزبون</option>
                     </select>
                     <span class="badge badge-danger badge-lg" id="total_debts_badge">إجمالي الديون: 0</span>
@@ -2038,7 +2055,7 @@
                                 <option value="1000">أقرب 1000 د.ع</option>
                             </select>
                         </div>
-                        <div class="form-group"><label>فائدة/زيادة على الأقساط الطويلة ٪ (0 = بدون)</label><input type="number" id="st_instFee" step="1" onchange="saveStoreSettings()"></div>
+                        <div class="form-group"><label>نسبة ربح التقسيط الافتراضية ٪ (تُعبّأ تلقائيًا عند البيع بالأقساط، ويمكن تعديلها لكل فاتورة)</label><input type="number" id="st_instFee" step="0.5" onchange="saveStoreSettings()"></div>
                         <div class="form-group"><label>أقصى دين مسموح للزبون (للتنبيه)</label><input type="number" id="st_debtCeiling" step="50000" onchange="saveStoreSettings()"></div>
                         <div class="form-group"><label>حد التنبيه للمخزون</label><input type="number" id="st_lowAlert" step="1" onchange="saveStoreSettings()"></div>
                         <div class="form-group"><label>الأرقام</label>
@@ -2825,7 +2842,7 @@
         if (kind === "inventory") return { title: "المخزون", headers: ["الصنف", "القسم", "SKU", "الرصيد", "الحد الأدنى", "الكلفة", "السعر", "قيمة الكلفة", "قيمة البيع", "المكان"], rows: state.inventory.map(i => [i.name, i.cat, i.sku, i.qty, i.min, i.cost, i.price, i.qty * i.cost, i.qty * i.price, i.loc]) };
         if (kind === "installments") {
             const list = state.sales.filter(s => s.inst);
-            return { title: "الأقساط", headers: ["العقد", "الفاتورة", "التاريخ", "الزبون", "الهاتف", "الجهاز", "الإجمالي", "المقدمة", "الدين", "المتبقي", "القسط", "الأشهر", "الكفيل", "الحالة"], rows: list.map(s => [s.inst.id || s.no, s.no, s.date, s.cust, s.phone, (s.items || []).map(i => i.name).join(" + "), saleTotal(s), s.inst.down, s.inst.debt, s.inst.remaining, s.inst.monthly, s.inst.months, s.inst.guarantor, instStatusText(s)]) };
+            return { title: "الأقساط", headers: ["العقد", "الفاتورة", "التاريخ", "الزبون", "الهاتف", "الجهاز", "الإجمالي", "المقدمة", "الزيادة", "النسبة٪", "الدين", "المتبقي", "القسط", "الأشهر", "الكفيل", "الحالة"], rows: list.map(s => [s.inst.id || s.no, s.no, s.date, s.cust, s.phone, (s.items || []).map(i => i.name).join(" + "), saleTotal(s), s.inst.down, s.inst.fee || 0, s.inst.feePct || 0, s.inst.debt, s.inst.remaining, s.inst.monthly, s.inst.months, s.inst.guarantor, instStatusText(s)]) };
         }
         if (kind === "customers") {
             const list = customerStatsList();
@@ -3433,7 +3450,7 @@
     function renderHelp() {
         $("helpBox").innerHTML = `
             <p><b>كيف أبدأ؟</b> ابدأ من «المخزون» وأضف أصنافك، ثم سجّل أول فاتورة عبر <b>نقطة البيع (F2)</b>. كل شيء يُحفظ تلقائيًا داخل جهازك.</p>
-            <p><b>الأقساط:</b> عند الدفع اختر «أقساط شهرية»، حدد المقدمة وعدد الأشهر؛ يبني النظام جدول استحقاق تلقائي مع تنبيه للتأخير وزر تنبيه واتساب.</p>
+            <p><b>الأقساط:</b> عند الدفع اختر «أقساط شهرية»، حدد المقدمة وعدد الأشهر؛ ثم ضع <b>مبلغ الزيادة (الربح)</b> أو <b>نسبتها المئوية</b> — النظام يحسب الأخرى تلقائيًا ويُظهر القسط الشهري وإجمالي الدين قبل الحفظ (مثال: جهاز ١٠٠ ألف وزيادة ٢٥ ألف = نسبة ٢٥٪ وقسط ٣١,٢٥٠ على ٤ أشهر). يمكن تثبيت نسبة افتراضية من الإعدادات. تُرتَّب العقود تلقائيًا «الأقوى دينًا أولًا» (المتأخرة ثم الأعلى متبقيًا)، ويبني النظام جدول استحقاق مع تنبيه تأخير وزر واتساب.</p>
             <p><b>الطباعة:</b> من «طباعة وصل الشراء» اختر A4 للورقة العادية أو A6 للطابعة الحرارية، وسيظهر الباركود والتفقيط إن كانت مفعّلة من الإعدادات.</p>
             <p><b>الورديات:</b> افتح الوردية صباحًا بمبلغ المفتتح، وسجّل المصروفات في «الخزينة»، وعند الإغلاق أدخل المبلغ المعدود ليحسب الفرق تلقائيًا.</p>
             <p><b>الأمان:</b> لا يوجد خادم ولا إنترنت مطلوب. خذ نسخة احتياطية (Ctrl+B) مرة أسبوعيًا وضعها على فلاشة أو واتساب.</p>
@@ -3547,13 +3564,22 @@
         inst.months = out.length;
         return out;
     }
-    function makeInstallment(total, down, months, startDate, guarantor, saleDate) {
-        let debt = Math.max(0, total - down);
-        const fee = num(state.settings.instFee);
-        if (fee > 0 && months >= 9) debt = Math.round(debt * (1 + fee / 100));
+    function makeInstallment(total, down, months, startDate, guarantor, saleDate, feeAmt) {
+        const baseDebt = Math.max(0, total - down);
+        let fee = 0;
+        if (feeAmt !== undefined && feeAmt !== null) {
+            fee = Math.max(0, num(feeAmt));
+        } else {
+            // النسبة الافتراضية من الإعدادات تُحسب على إجمالي الفاتورة وتطبّق على كل العقود
+            const rate = num(state.settings.instFee);
+            if (rate > 0) fee = Math.round(total * rate / 100 / 250) * 250;
+        }
+        fee = Math.round(num(fee) / 250) * 250; // تقريب لمضاعفات الـ250 دينار
+        const debt = baseDebt + fee;
         const monthly = months > 0 ? Math.round(debt / months / 250) * 250 : debt;
         const inst = {
-            id: genCounter("warranty", "WR-"), down: Math.max(0, down), debt, remaining: debt, months: months || 1, monthly,
+            id: genCounter("warranty", "WR-"), down: Math.max(0, down), fee, feePct: total > 0 ? Math.round(fee / total * 1000) / 10 : 0,
+            debt, remaining: debt, months: months || 1, monthly,
             start: startDate || addMonths(saleDate || todayStr(), 1), guarantor: guarantor || "غير مسجل", status: "active", paid: 0, paidCount: 0, payments: []
         };
         if (inst.down > 0) inst.payments.push({ date: saleDate || todayStr(), amount: inst.down, note: "دفعة مقدمة عند الاستلام" });
@@ -3890,15 +3916,39 @@
         paid = clamp(paid, 0, total);
         if (isInst) $("posPaidNow").value = paid;
         if (isPart) $("posInstDown").value = paid;
-        const debt = Math.max(0, total - (isInst || isPart ? paid : total));
+        const fee = (isInst || isPart) ? Math.max(0, num($("posInstFeeAmt").value)) : 0;
+        const debt = Math.max(0, total - (isInst || isPart ? paid : total)) + fee;
         const months = num($("posInstMonths").value) || 1;
-        $("posMonthly").textContent = money(months ? debt / months : debt);
+        const monthly = months ? Math.round(debt / months / 250) * 250 : debt;
+        $("posMonthly").textContent = money(monthly);
         $("posDebt").textContent = money(debt);
-        return { sub, disc, tax, total, cost };
+        if ($("posFeeShow")) $("posFeeShow").textContent = money(fee);
+        return { sub, disc, tax, total, cost, fee };
     }
     function posPayTypeChanged() {
         const v = $("posPayType").value;
         $("posInstBox").style.display = (v === "installment" || v === "partial") ? "" : "none";
+        if ((v === "installment" || v === "partial") && !num($("posInstFeeAmt").value) && !num($("posInstFeePct").value)) {
+            // أول مرة يختار التقسيط: نعبّئ النسبة الافتراضية من الإعدادات تلقائيًا
+            const rate = num(state.settings.instFee);
+            if (rate > 0) $("posInstFeePct").value = rate;
+            posFeePctChanged(true);
+        }
+        posRecalc();
+    }
+    // ربط مبلغ الزيادة بنسبتها على الصافي (بمضاعفات الـ250)
+    function roundFee(x) { return Math.round(Math.max(0, num(x)) / 250) * 250; }
+    function posFeePctChanged(silent) {
+        const calc = posRecalc();
+        const fee = roundFee(calc.total * num($("posInstFeePct").value) / 100);
+        if (!silent) $("posInstFeeAmt").value = fee || "";
+        else $("posInstFeeAmt").value = fee;
+        posRecalc();
+    }
+    function posFeeAmtChanged() {
+        const calc = posRecalc();
+        const fee = roundFee($("posInstFeeAmt").value);
+        $("posInstFeePct").value = calc.total > 0 ? (Math.round(fee / calc.total * 1000) / 10) : 0;
         posRecalc();
     }
     function posApplyDiscount() {
@@ -3985,7 +4035,7 @@
         sale.total = calc.total; sale.cost = calc.cost; sale.profit = calc.sub - calc.disc - calc.cost;
         sale.vcode = verifyCode(sale.no);
         if (method === "installment" || (method === "partial" && sale.total - sale.pay.paid > 0)) {
-            sale.inst = makeInstallment(sale.total, sale.pay.paid, num($("posInstMonths").value), $("posInstStart").value || addMonths(sale.date, 1), $("posGuarantor").value.trim(), sale.date);
+            sale.inst = makeInstallment(sale.total, sale.pay.paid, num($("posInstMonths").value), $("posInstStart").value || addMonths(sale.date, 1), $("posGuarantor").value.trim(), sale.date, num($("posInstFeeAmt").value));
             recomputeInst(sale);
             if (method === "partial") sale.pay.method = "partial";
         }
@@ -4008,6 +4058,8 @@
         ui.cart = []; ui.cartDiscount = 0;
         ["posCustName", "posCustPhone", "posCustAddr", "posNote"].forEach(id => $(id).value = "");
         $("posInstDown").value = 0;
+        if ($("posInstFeeAmt")) $("posInstFeeAmt").value = 0;
+        if ($("posInstFeePct")) $("posInstFeePct").value = 0;
         save(); renderCart(); renderAllViews();
         ui.lastSale = sale.no;
         if (sale.inst && dueInfo(sale).overdue) toast("تنبيه: أول قسط بتاريخ " + fmtDate(sale.inst.schedule[0].due), "warn", 5000);
@@ -4075,11 +4127,31 @@
         $("ss-profit").textContent = money(s - c);
         $("ss-profit").style.color = (s - c) >= 0 ? "var(--secondary)" : "var(--danger)";
         const show = $("ss_paytype").value === "installment";
-        $("ss-monthly").textContent = show ? money((s - num($("inst_down").value)) / Math.max(1, num($("inst_months").value))) : "—";
-        $("ss-debt").textContent = show ? money(Math.max(0, s - num($("inst_down").value))) : "—";
+        const fee = show ? Math.max(0, num($("inst_feeAmt").value)) : 0;
+        const debt = Math.max(0, s - num($("inst_down").value)) + fee;
+        const mm = Math.max(1, num($("inst_months").value));
+        $("ss-monthly").textContent = show ? money(Math.round(debt / mm / 250) * 250) : "—";
+        $("ss-debt").textContent = show ? money(debt) : "—";
+    }
+    function ssFeePctChanged() {
+        const s = num($("ss_price").value);
+        const fee = roundFee(s * num($("inst_feePct").value) / 100);
+        $("inst_feeAmt").value = fee || "";
+        ssCalc();
+    }
+    function ssFeeAmtChanged() {
+        const s = num($("ss_price").value);
+        const fee = roundFee($("inst_feeAmt").value);
+        $("inst_feePct").value = s > 0 ? (Math.round(fee / s * 1000) / 10) : 0;
+        ssCalc();
     }
     function toggleInstBox() {
-        $("installment_box").style.display = $("ss_paytype").value === "installment" ? "" : "none";
+        const show = $("ss_paytype").value === "installment";
+        $("installment_box").style.display = show ? "" : "none";
+        if (show && !num($("inst_feeAmt").value) && !num($("inst_feePct").value)) {
+            const rate = num(state.settings.instFee);
+            if (rate > 0) { $("inst_feePct").value = rate; ssFeePctChanged(); }
+        }
         ssCalc();
     }
     function recordSingleSale(mode) {
@@ -4106,7 +4178,7 @@
         if (payType === "installment") {
             const months = num($("inst_months").value) || 1;
             if (num($("inst_down").value) >= sell) { toast("المقدمة يجب أن تكون أقل من السعر", "err"); return null; }
-            sale.inst = makeInstallment(sell, num($("inst_down").value), months, $("inst_start_date").value || addMonths(date, 1), $("inst_guarantor").value.trim(), date);
+            sale.inst = makeInstallment(sell, num($("inst_down").value), months, $("inst_start_date").value || addMonths(date, 1), $("inst_guarantor").value.trim(), date, num($("inst_feeAmt").value));
             recomputeInst(sale);
         }
         finalizeSale(sale, false);
@@ -4539,10 +4611,17 @@
         else if (f === "active") list = list.filter(s => s.inst.status === "active" && s.inst.remaining > 0);
         else if (f === "paused") list = list.filter(s => s.inst.status === "paused");
         else if (f === "done") list = list.filter(s => s.inst.remaining <= 0);
-        const sort = $("instSort") ? $("instSort").value : "due";
+        const sort = $("instSort") ? $("instSort").value : "strong";
         list.sort((a, b) => {
-            if (sort === "debt") return num(b.inst.remaining) - num(a.inst.remaining);
             if (sort === "name") return a.cust.localeCompare(b.cust, "ar");
+            if (sort === "debt") return num(b.inst.remaining) - num(a.inst.remaining);
+            if (sort === "strong") {
+                // الأقوى تحصيلاً: المتأخر أولًا، ثم الأعلى متبقياً، ثم الأقرب استحقاقاً
+                const oa = dueInfo(a).overdue ? 1 : 0, ob = dueInfo(b).overdue ? 1 : 0;
+                if (oa !== ob) return ob - oa;
+                const d = num(b.inst.remaining) - num(a.inst.remaining);
+                if (d) return d;
+            }
             return String(nextDueDate(a) || "9999").localeCompare(String(nextDueDate(b) || "9999"));
         });
         return list;
@@ -4556,11 +4635,15 @@
         const monthCollected = sum(state.treasury.filter(t => t.cat === "تحصيل أقساط" && monthKey(t.date) === monthKey(todayStr())), t => t.amount);
         const totalPlan = sum(all, s => num(s.inst.debt));
         const totalPaid = sum(all, s => num(s.inst.debt) - num(s.inst.remaining));
+        const totalFee = sum(all.filter(s => !isVoid(s)), s => num(s.inst.fee));
+        const totalFeePending = sum(all.filter(s => !isVoid(s) && s.inst.remaining > 0), s => num(s.inst.fee));
         $("instStats").innerHTML = [
             ["إجمالي الديون القائمة", money(debt), "red", "💳"],
             ["عقود متأخرة", digitsMap(overdue.length) + " عقد", "red", "⏰"],
             ["مُحصّل هذا الشهر", money(monthCollected), "green", "✅"],
             ["نسبة التحصيل", digitsMap(totalPlan ? Math.round(totalPaid / totalPlan * 100) : 0) + "٪", "", "📊"],
+            ["أرباح التقسيط (كل العقود)", money(totalFee), "green", "📈"],
+            ["أرباح التقسيط القائمة", money(totalFeePending), "", "💹"],
             ["عقود نشطة", digitsMap(all.filter(s => s.inst.status === "active" && s.inst.remaining > 0).length), "", "🟢"],
             ["عقود مسددة", digitsMap(all.filter(s => s.inst.remaining <= 0).length), "green", "🎉"]
         ].map(x => `<div class="kpi ${x[2]}" style="padding:12px"><div class="kpi-label">${x[3]} ${x[0]}</div><div class="kpi-value" style="font-size:1.15rem">${x[1]}</div></div>`).join("");
@@ -4575,7 +4658,7 @@
                     ${telLink(s.phone) ? `<a class="btn btn-xs btn-ghost" style="text-decoration:none" href="${telLink(s.phone)}" target="_blank" rel="noopener">💬 واتساب</a>` : ""}</td>
                 <td><span class="badge badge-info">${esc(s.no)}</span><div class="muted">${fmtDate(s.date)}</div></td>
                 <td><div>${(s.items || []).map(i => esc(i.name)).join(" + ")}</div><div class="muted">${(s.items || []).map(i => esc(i.serial || "")).join(", ")}</div></td>
-                <td class="num">${money(saleTotal(s))}<div class="muted">مقدمة ${money(inst.down)}</div></td>
+                <td class="num">${money(saleTotal(s))}<div class="muted">مقدمة ${money(inst.down)}</div>${num(inst.fee) ? `<div class="muted" style="color:var(--secondary)">زيادة ${money(inst.fee)} (${digitsMap(inst.feePct || 0)}٪)</div>` : ""}</td>
                 <td class="num strong" style="color:${inst.remaining > 0 ? "var(--danger)" : "var(--secondary)"}">${money(inst.remaining)}<div class="muted">من ${money(inst.debt)}</div></td>
                 <td class="num">${money(inst.monthly)}<div class="muted">${digitsMap(inst.paidCount)}/${digitsMap(inst.months)} قسط</div></td>
                 <td style="min-width:120px"><div class="progress-track"><div class="progress-fill ${pct > 75 ? "" : pct > 35 ? "warn" : "danger"}" style="width:${pct}%"></div></div><div class="muted">${digitsMap(pct)}٪</div></td>
@@ -4671,7 +4754,8 @@
                 <div class="stat-tile"><span class="st-label">إجمالي الدين</span><span class="st-val">${money(inst.debt)}</span></div>
                 <div class="stat-tile"><span class="st-label">المسدّد</span><span class="st-val" style="color:var(--secondary)">${money(inst.paid)}</span></div>
                 <div class="stat-tile"><span class="st-label">المتبقي</span><span class="st-val" style="color:var(--danger)">${money(inst.remaining)}</span></div>
-                <div class="stat-tile"><span class="st-label">الكفيل</span><span class="st-val" style="font-size:.9rem">${esc(inst.guarantor || "—")}</span></div></div>
+                <div class="stat-tile"><span class="st-label">الزيادة/الربح</span><span class="st-val" style="font-size:1rem;color:var(--secondary)">${money(inst.fee || 0)} <small>(${digitsMap(inst.feePct || 0)}٪)</small></span></div>
+                <div class="stat-tile"><span class="st-label">الكفيل</span><span class="st-val" style="font-size:.9rem">${esc(inst.guarantor || "—")}</span></div></div></div>
                 <div class="table-responsive" style="margin-top:10px;max-height:44vh;overflow:auto"><table><thead><tr><th>#</th><th>الاستحقاق</th><th>المبلغ</th><th>الحالة</th><th></th><th>ملاحظة</th></tr></thead><tbody>${rows}</tbody></table></div>
                 <div style="margin-top:8px"><div class="muted">سجل الدفعات:</div><div class="payments-timeline" style="margin-top:4px">${inst.payments.map(p => `<span class="badge badge-success" style="margin:2px">${fmtDate(p.date)} • ${money(p.amount)} • ${esc(p.note || "")}</span>`).join("") || '<span class="muted">لا دفعات بعد</span>'}</div></div>`,
             actions: [{ label: "إغلاق", cls: "btn-ghost" }, { label: "🖨️ طباعة الجدول", cls: "btn-primary", js: "closeModal('modal-dynamic');printStatement('" + no + "')" }]
@@ -4706,7 +4790,7 @@
         const s = state.sales.find(x => x.no === no); if (!s || !s.inst) return;
         const inst = s.inst;
         const html = `<div class="receipt-paper mode-a4">${docHead("كشف حساب أقساط", s.no)}
-            <div class="rp-meta"><div>الزبون: <strong>${esc(s.cust)}</strong></div><div>الهاتف: <strong>${esc(s.phone || "—")}</strong></div><div>الجهاز: <strong>${(s.items || []).map(i => esc(i.name)).join(" + ")}</strong></div><div>الكفيل: <strong>${esc(inst.guarantor || "—")}</strong></div></div>
+            <div class="rp-meta"><div>الزبون: <strong>${esc(s.cust)}</strong></div><div>الهاتف: <strong>${esc(s.phone || "—")}</strong></div><div>الجهاز: <strong>${(s.items || []).map(i => esc(i.name)).join(" + ")}</strong></div><div>الكفيل: <strong>${esc(inst.guarantor || "—")}</strong></div><div>سعر الكاش: <strong>${money(saleTotal(s))}</strong></div><div>المقدمة: <strong>${money(inst.down)}</strong></div>${num(inst.fee) ? `<div>ربح التقسيط: <strong>${money(inst.fee)} (${digitsMap(inst.feePct || 0)}٪)</strong></div>` : ""}<div>إجمالي دين الأقساط: <strong>${money(inst.debt)}</strong></div></div>
             <table class="rp-table"><thead><tr><th>رقم القسط</th><th>تاريخ الاستحقاق</th><th>المبلغ</th><th>الحالة</th><th>ملاحظة</th></tr></thead><tbody>
             ${inst.schedule.map(x => `<tr><td>${digitsMap(x.n)}</td><td>${fmtDate(x.due)}</td><td>${money(x.amount)}</td><td>${x.paid ? "مسدد ✓" : "مفتوح"}</td><td>${esc(x.note || "")}</td></tr>`).join("")}
             </tbody><tfoot><tr><td colspan="2">الإجمالي</td><td>${money(inst.debt)}</td><td colspan="2">المتبقي: <b>${money(inst.remaining)}</b></td></tr></tfoot></table>
@@ -4718,7 +4802,7 @@
     function printReleaseLetter(s) {
         const html = `<div class="receipt-paper mode-a4">${docHead("براءة ذمة / إخلاء طرف", s.no)}
             <div style="font-size:1rem;line-height:2.1;font-weight:700;text-align:center;margin:26px 0">
-                نشهد بأن السيد/ة <b>${esc(s.cust)}</b> ({esc(s.phone || "—")}) قد قام بتسديد كامل مستحقات الفاتورة <b>${esc(s.no)}</b>
+                نشهد بأن السيد/ة <b>${esc(s.cust)}</b> (${esc(s.phone || "—")}) قد قام بتسديد كامل مستحقات الفاتورة <b>${esc(s.no)}</b>
                 البالغ قدرها <b>${money(saleTotal(s))}</b> فقط ${tafqit(saleTotal(s))} دينار عراقي لا غير،
                 ولم يترتب في ذمته أي مبلغ لصالح المعرض.
             </div>
@@ -5619,6 +5703,8 @@
                 ${tax ? `<div class="tl"><span>ضريبة ${digitsMap(S.taxRate)}٪</span><b>${money(tax)}</b></div>` : ""}
                 <div class="tl grand"><span>الصافي</span><span>${money(saleTotal(s))}</span></div>
                 ${s.inst ? `<div class="tl"><span>مدفوع / مقدمة</span><b>${money(s.inst.down)}</b></div>
+                ${num(s.inst.fee) ? `<div class="tl"><span>ربح التقسيط (${digitsMap(s.inst.feePct || 0)}٪)</span><b>${money(s.inst.fee)}</b></div>` : ""}
+                <div class="tl"><span>إجمالي دين الأقساط</span><b>${money(s.inst.debt)}</b></div>
                 <div class="tl"><span>الدين المتبقي</span><b style="color:#dc2626">${money(s.inst.remaining)}</b></div>
                 <div class="tl"><span>القسط الشهري</span><b>${money(s.inst.monthly)} × ${digitsMap(s.inst.months)}</b></div>`
                 : `<div class="tl"><span>المدفوع</span><b>${money(s.pay.paid)}</b></div>${saleDebt(s) > 0 ? `<div class="tl"><span>المتبقي</span><b style="color:#dc2626">${money(saleDebt(s))}</b></div>` : ""}`}
@@ -5852,8 +5938,8 @@
     function exportMasterInstallmentsExcel() {
         const rows = state.sales.filter(s => s.inst);
         exportTableExcel("الكشف الشامل للأقساط والديون",
-            ["العقد", "الفاتورة", "التاريخ", "الزبون", "الهاتف", "العنوان", "الأجهزة", "السيريالات", "إجمالي الفاتورة", "المقدمة", "إجمالي الدين", "المتبقي", "القسط الشهري", "عدد الأشهر", "المسددة", "أول استحقاق", "آخر استحقاق", "الكفيل", "الحالة", "الكاشير"],
-            rows.map(s => { const i = s.inst; return [i.id || "", s.no, s.date, s.cust, s.phone, s.addr || "", (s.items || []).map(x => x.name).join(" + "), (s.items || []).map(x => x.serial).join(" | "), saleTotal(s), i.down, i.debt, i.remaining, i.monthly, i.months, i.paidCount, i.schedule.length ? i.schedule[0].due : "", i.schedule.length ? i.schedule[i.schedule.length - 1].due : "", i.guarantor || "", instStatusText(s), s.cashier]; }),
+                ["العقد", "الفاتورة", "التاريخ", "الزبون", "الهاتف", "العنوان", "الأجهزة", "السيريالات", "إجمالي الفاتورة", "المقدمة", "زيادة التقسيط", "النسبة٪", "إجمالي الدين", "المتبقي", "القسط الشهري", "عدد الأشهر", "المسددة", "أول استحقاق", "آخر استحقاق", "الكفيل", "الحالة", "الكاشير"],
+            rows.map(s => { const i = s.inst; return [i.id || "", s.no, s.date, s.cust, s.phone, s.addr || "", (s.items || []).map(x => x.name).join(" + "), (s.items || []).map(x => x.serial).join(" | "), saleTotal(s), i.down, i.fee || 0, i.feePct || 0, i.debt, i.remaining, i.monthly, i.months, i.paidCount, i.schedule.length ? i.schedule[0].due : "", i.schedule.length ? i.schedule[i.schedule.length - 1].due : "", i.guarantor || "", instStatusText(s), s.cashier]; }),
             "installments-master");
         logAct("تصدير كشف الأقساط", rows.length + " عقد");
     }

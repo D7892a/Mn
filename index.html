@@ -1,0 +1,2774 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>معرض المصطفى للأجهزة المنزلية - النظام الشامل</title>
+    <!-- خط القاهرة العربي الواضح -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #1e3a8a;
+            --primary-light: #3b82f6;
+            --primary-dark: #0f172a;
+            --secondary: #059669;
+            --secondary-light: #10b981;
+            --accent: #d97706;
+            --danger: #dc2626;
+            --bg-body: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border-color: #cbd5e1;
+            --sidebar-width: 300px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --shadow-card: 0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -2px rgba(0,0,0,0.05);
+            --shadow-hover: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.08);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Cairo', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* شريط التنقل العلوي */
+        .top-navbar {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+            color: #ffffff;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .menu-toggle-btn {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            color: #ffffff;
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .menu-toggle-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: scale(1.03);
+        }
+
+        .menu-toggle-btn span {
+            display: block;
+            width: 22px;
+            height: 2.5px;
+            background-color: #ffffff;
+            border-radius: 2px;
+        }
+
+        .brand-info h1 {
+            font-size: 1.3rem;
+            font-weight: 900;
+        }
+
+        .brand-info p {
+            font-size: 0.75rem;
+            opacity: 0.85;
+        }
+
+        .nav-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .active-user-badge {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 6px 14px;
+            border-radius: 30px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* القائمة الجانبية المنزلقة (Drawer) */
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 1050;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .sidebar-drawer {
+            position: fixed;
+            top: 0;
+            right: calc(-1 * var(--sidebar-width));
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: #ffffff;
+            z-index: 1100;
+            box-shadow: -5px 0 25px rgba(0,0,0,0.2);
+            transition: right 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .sidebar-drawer.active {
+            right: 0;
+        }
+
+        .drawer-header {
+            background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+            color: #ffffff;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .drawer-header h3 {
+            font-size: 1.15rem;
+            font-weight: 800;
+        }
+
+        .drawer-close-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: #ffffff;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .drawer-menu {
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            flex-grow: 1;
+        }
+
+        .menu-category-title {
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin: 12px 6px 4px 6px;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            border-radius: 10px;
+            color: var(--text-main);
+            font-weight: 700;
+            font-size: 0.92rem;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .menu-item:hover {
+            background: #eff6ff;
+            color: var(--primary);
+            border-color: #bfdbfe;
+        }
+
+        .menu-item.active {
+            background: var(--primary);
+            color: #ffffff;
+            border-color: var(--primary);
+            box-shadow: 0 4px 10px rgba(30, 58, 138, 0.25);
+        }
+
+        .menu-badge {
+            margin-right: auto;
+            background: #e2e8f0;
+            color: var(--text-main);
+            font-size: 0.72rem;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-weight: 800;
+        }
+
+        .menu-item.active .menu-badge {
+            background: rgba(255, 255, 255, 0.25);
+            color: #ffffff;
+        }
+
+        /* الحاوية الرئيسية */
+        .main-wrapper {
+            flex-grow: 1;
+            padding: 20px;
+            max-width: 1400px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            box-shadow: var(--shadow-card);
+            border: 1px solid rgba(226, 232, 240, 0.9);
+            margin-bottom: 24px;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            border-bottom: 2px solid var(--bg-body);
+            padding-bottom: 16px;
+            margin-bottom: 20px;
+        }
+
+        .card-header h2 {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--primary-dark);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* النماذج وشبكة الحقول */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        label {
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        input, select, textarea {
+            padding: 11px 14px;
+            border: 1.5px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 0.95rem;
+            background-color: #ffffff;
+            color: var(--text-main);
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--primary-light);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+
+        .calc-preview-bar {
+            background: #eff6ff;
+            border: 1.5px dashed var(--primary-light);
+            border-radius: 12px;
+            padding: 14px 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 700;
+            margin-top: 10px;
+            grid-column: 1 / -1;
+        }
+
+        .profit-value {
+            font-size: 1.25rem;
+            font-weight: 900;
+            color: var(--secondary);
+        }
+
+        /* الأزرار */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 11px 20px;
+            font-size: 0.92rem;
+            font-weight: 800;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.05);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: #ffffff;
+            box-shadow: 0 4px 10px rgba(30, 58, 138, 0.25);
+        }
+
+        .btn-secondary {
+            background: var(--secondary);
+            color: #ffffff;
+            box-shadow: 0 4px 10px rgba(5, 150, 105, 0.25);
+        }
+
+        .btn-accent {
+            background: var(--accent);
+            color: #ffffff;
+            box-shadow: 0 4px 10px rgba(217, 119, 6, 0.25);
+        }
+
+        .btn-excel {
+            background: #107c41;
+            color: #ffffff;
+            box-shadow: 0 4px 10px rgba(16, 124, 65, 0.25);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: #ffffff;
+        }
+
+        .btn-outline {
+            background: #ffffff;
+            border: 1.5px solid var(--border-color);
+            color: var(--text-main);
+        }
+
+        .btn-outline:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: #f8fafc;
+        }
+
+        /* أدوات الطباعة */
+        .print-toolbar {
+            background: #f1f5f9;
+            padding: 12px 18px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border-color);
+        }
+
+        .size-selector {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .size-btn {
+            background: #ffffff;
+            border: 1.5px solid var(--border-color);
+            padding: 6px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: all 0.2s;
+        }
+
+        .size-btn.active {
+            background: var(--primary);
+            color: #ffffff;
+            border-color: var(--primary);
+        }
+
+        /* حاوية الفاتورة والوصل */
+        .receipt-paper {
+            background: #ffffff;
+            margin: 0 auto;
+            border: 2px solid #0f172a;
+            border-radius: 14px;
+            box-shadow: var(--shadow-hover);
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .receipt-paper.mode-a4 {
+            max-width: 720px;
+            padding: 35px;
+            font-size: 0.95rem;
+        }
+
+        .receipt-paper.mode-a6 {
+            max-width: 390px;
+            padding: 16px;
+            font-size: 0.8rem;
+            border-radius: 8px;
+            border: 1.5px solid #334155;
+        }
+
+        .receipt-header {
+            text-align: center;
+            border-bottom: 2px dashed #94a3b8;
+            padding-bottom: 12px;
+            margin-bottom: 14px;
+        }
+
+        .receipt-header h3 {
+            font-size: 1.45rem;
+            font-weight: 900;
+            color: var(--primary-dark);
+        }
+
+        .mode-a6 .receipt-header h3 {
+            font-size: 1.15rem;
+        }
+
+        .receipt-meta-box {
+            display: flex;
+            justify-content: space-between;
+            background: #f8fafc;
+            padding: 8px 12px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            font-weight: 700;
+            border: 1px solid #e2e8f0;
+        }
+
+        .receipt-line {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px dotted var(--border-color);
+        }
+
+        .receipt-line strong {
+            color: var(--primary-dark);
+        }
+
+        .receipt-grand-total {
+            background: #f1f5f9;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 1.2rem;
+            font-weight: 900;
+            color: var(--primary-dark);
+            border-top: 2px solid var(--primary);
+        }
+
+        .mode-a6 .receipt-grand-total {
+            font-size: 1rem;
+            padding: 8px;
+        }
+
+        .receipt-signatures {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 24px;
+            padding: 0 10px;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        .mode-a6 .receipt-signatures {
+            margin-top: 14px;
+            font-size: 0.75rem;
+        }
+
+        .receipt-footer-note {
+            margin-top: 16px;
+            border-top: 1.5px dashed #cbd5e1;
+            padding-top: 10px;
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .warranty-paper {
+            border: 3px double var(--accent);
+            background: #fffdf9;
+        }
+
+        .warranty-badge {
+            background: #fef3c7;
+            color: #b45309;
+            border: 1px solid #fde68a;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            display: inline-block;
+            margin-bottom: 6px;
+        }
+
+        .warranty-conditions {
+            background: #fffbeb;
+            border: 1px solid #fde68a;
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 12px;
+            font-size: 0.78rem;
+            color: #92400e;
+            line-height: 1.5;
+        }
+
+        .stamp-mark {
+            border: 2px dashed var(--accent);
+            color: var(--accent);
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-weight: 900;
+            font-size: 0.82rem;
+            display: inline-block;
+            transform: rotate(-4deg);
+        }
+
+        /* تصميم كشف حساب الزبون (Dossier View) */
+        .profile-overview-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+            gap: 14px;
+            margin-bottom: 20px;
+        }
+
+        .profile-stat-box {
+            background: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .profile-stat-box.highlight {
+            border-right: 5px solid var(--danger);
+            background: #fff5f5;
+        }
+
+        .item-purchase-card {
+            border: 1.5px solid var(--border-color);
+            border-radius: 12px;
+            padding: 18px;
+            margin-bottom: 16px;
+            background: #ffffff;
+            box-shadow: var(--shadow-card);
+        }
+
+        .item-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--bg-body);
+            padding-bottom: 10px;
+            margin-bottom: 12px;
+        }
+
+        .payments-timeline {
+            margin-top: 12px;
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 0.85rem;
+        }
+
+        .payment-log-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: #e2e8f0;
+            padding: 3px 8px;
+            border-radius: 6px;
+            margin: 3px;
+            font-weight: 700;
+            font-size: 0.78rem;
+        }
+
+        /* الجداول */
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: right;
+            font-size: 0.9rem;
+            background: #ffffff;
+        }
+
+        th {
+            background: #f8fafc;
+            color: var(--primary-dark);
+            font-weight: 800;
+            padding: 12px 14px;
+            border-bottom: 2px solid var(--border-color);
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-main);
+            vertical-align: middle;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background-color: #f8fafc;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.78rem;
+            font-weight: 800;
+        }
+
+        .badge-success { background: #dcfce7; color: #15803d; }
+        .badge-warning { background: #fef3c7; color: #b45309; }
+        .badge-info { background: #e0f2fe; color: #0369a1; }
+        .badge-danger { background: #fee2e2; color: #b91c1c; }
+
+        /* شريط التقدم للأقساط */
+        .progress-track {
+            background: #e2e8f0;
+            border-radius: 8px;
+            height: 8px;
+            width: 100%;
+            overflow: hidden;
+            margin-top: 4px;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, var(--secondary), var(--secondary-light));
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+
+        /* بطاقات الإحصائيات */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 16px;
+            border-right: 5px solid var(--primary);
+            box-shadow: var(--shadow-card);
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .stat-card.green { border-right-color: var(--secondary); }
+        .stat-card.amber { border-right-color: var(--accent); }
+        .stat-card.red { border-right-color: var(--danger); }
+
+        .stat-label {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            font-weight: 700;
+        }
+
+        .stat-number {
+            font-size: 1.45rem;
+            font-weight: 900;
+            color: var(--text-main);
+        }
+
+        .stat-footnote {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+        }
+
+        /* النوافذ المنبثقة (Modals) */
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(4px);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.25s ease;
+        }
+
+        .modal-backdrop.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-box {
+            background: #ffffff;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 480px;
+            padding: 24px;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.25);
+            transform: scale(0.95);
+            transition: all 0.25s ease;
+        }
+
+        .modal-backdrop.active .modal-box {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            border-bottom: 1.5px solid var(--bg-body);
+            padding-bottom: 10px;
+        }
+
+        .modal-header h3 {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: var(--primary-dark);
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            justify-content: flex-end;
+        }
+
+        /* رسائل الإشعار السريعة (Toast) */
+        #toast-container {
+            position: fixed;
+            bottom: 25px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--primary-dark);
+            color: #ffffff;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-weight: 700;
+            font-size: 0.92rem;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            z-index: 9999;
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        #toast-container.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        /* قواعد الطباعة الصارمة */
+        @media print {
+            body {
+                background: #ffffff !important;
+                padding: 0 !important;
+            }
+            .top-navbar, .sidebar-drawer, .sidebar-overlay, .print-toolbar, .no-print, .btn, .modal-backdrop {
+                display: none !important;
+            }
+            .main-wrapper {
+                padding: 0 !important;
+                max-width: 100% !important;
+            }
+            .tab-view {
+                display: none !important;
+            }
+            .tab-view.print-target {
+                display: block !important;
+            }
+            .receipt-paper {
+                box-shadow: none !important;
+                border: 2px solid #000 !important;
+                margin: 0 auto !important;
+                page-break-inside: avoid;
+            }
+            .receipt-paper.mode-a4 {
+                width: 100% !important;
+                max-width: 100% !important;
+                padding: 18mm !important;
+            }
+            .receipt-paper.mode-a6 {
+                width: 105mm !important;
+                max-width: 105mm !important;
+                padding: 6mm !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- الشريط العلوي والتنقل -->
+    <header class="top-navbar no-print">
+        <div class="nav-right">
+            <button class="menu-toggle-btn" id="menuToggleBtn" onclick="toggleSidebar()" title="فتح القائمة الرئيسية">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <div class="brand-info">
+                <h1>معرض المصطفى للأجهزة المنزلية</h1>
+                <p>إدارة المبيعات • كشف حساب الزبائن • الأقساط • تصدير إكسل Excel</p>
+            </div>
+        </div>
+        <div class="nav-left">
+            <div class="active-user-badge">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                <span id="display-cashier-name">الكاشير: مصطفى (المدير)</span>
+            </div>
+            <span id="current-clock" style="font-size: 0.8rem; font-weight: 700; opacity: 0.9;">--:--</span>
+        </div>
+    </header>
+
+    <!-- القائمة الجانبية المنزلقة (Drawer) -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+    <aside class="sidebar-drawer" id="sidebarDrawer">
+        <div class="drawer-header">
+            <h3>أقسام نظام المعرض</h3>
+            <button class="drawer-close-btn" onclick="toggleSidebar()">✕</button>
+        </div>
+        <div class="drawer-menu">
+            <span class="menu-category-title">العمليات والمبيعات</span>
+            <div class="menu-item active" onclick="switchSection('tab-pos')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+                <span>تسجيل بيع فوري</span>
+            </div>
+            <div class="menu-item" onclick="switchSection('tab-customer-dossier')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                <span>ملف وكشف الزبائن الشامل</span>
+                <span class="menu-badge" style="background:#dbeafe; color:#1e40af;">بحث شامل</span>
+            </div>
+            <div class="menu-item" onclick="switchSection('tab-invoice-view')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+                <span>وصل الشراء الفوري</span>
+                <span class="menu-badge">A4 / A6</span>
+            </div>
+            <div class="menu-item" onclick="switchSection('tab-warranty-view')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                <span>وصل وشهادة الضمان</span>
+                <span class="menu-badge">معتمد</span>
+            </div>
+
+            <span class="menu-category-title">الدفاتر والديون</span>
+            <div class="menu-item" onclick="switchSection('tab-installments')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
+                <span>سجل الأقساط والديون</span>
+                <span class="menu-badge" id="badge-inst-count">0</span>
+            </div>
+            <div class="menu-item" onclick="switchSection('tab-history')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
+                <span>أرشيف الفواتير السابقة</span>
+            </div>
+
+            <span class="menu-category-title">التقارير والتصدير</span>
+            <div class="menu-item" onclick="switchSection('tab-reports')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                <span>الأرباح والمبيعات</span>
+            </div>
+            <div class="menu-item" onclick="exportMasterInstallmentsExcel()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                <span style="color: #107c41; font-weight: 800;">تحميل كشف الإكسل الشامل (Excel)</span>
+            </div>
+
+            <span class="menu-category-title">الإدارة والإعدادات</span>
+            <div class="menu-item" onclick="openAdminSettingsWithAuth()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                <span>لوحة تحكم الإدارة (رمز PIN)</span>
+            </div>
+        </div>
+    </aside>
+
+    <!-- المحتوى الرئيسي للموقع -->
+    <main class="main-wrapper">
+
+        <!-- 1. قسم تسجيل بيع جديد -->
+        <section id="tab-pos" class="tab-view">
+            <div class="card">
+                <div class="card-header">
+                    <h2>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+                        تسجيل حركة بيع جديدة وإصدار الفواتير
+                    </h2>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                        <button type="button" class="btn btn-outline" onclick="openCategoryModal()">+ إضافة قسم جديد</button>
+                        <button type="button" class="btn btn-outline" onclick="openWarrantyModal()">+ إضافة ضمان جديد</button>
+                    </div>
+                </div>
+
+                <form id="posSaleForm" onsubmit="event.preventDefault(); recordNewSale();">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>اسم الزبون الكريم * (يمكنك كتابة اسم زبون سابق للربط بملفه)</label>
+                            <input type="text" id="cust_name" required list="customers_datalist" placeholder="مثال: حيدر كريم جاسم" onchange="autoFillCustomerPhone()">
+                            <datalist id="customers_datalist">
+                                <!-- تملأ تلقائياً بأسماء الزبائن -->
+                            </datalist>
+                        </div>
+                        <div class="form-group">
+                            <label>رقم هاتف الزبون</label>
+                            <input type="tel" id="cust_phone" placeholder="07XXXXXXXXX">
+                        </div>
+                        <div class="form-group">
+                            <label>القسم / الصنف *</label>
+                            <select id="item_category" required onchange="updateItemModelHint()">
+                                <!-- تُملأ ديناميكياً -->
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>اسم الجهاز والموديل *</label>
+                            <input type="text" id="item_model" required placeholder="مثال: سبليت ميديا 2 طن انفيرتر T3">
+                        </div>
+                        <div class="form-group">
+                            <label>الرقم التسلسلي (سيريال الجهاز)</label>
+                            <input type="text" id="item_serial" placeholder="اتركه فارغاً للتوليد التلقائي">
+                        </div>
+                        <div class="form-group">
+                            <label>سعر المشتري (التكلفة بالجملة) د.ع *</label>
+                            <input type="number" id="cost_price" required min="0" step="250" placeholder="مثال: 500000" oninput="updateProfitPreview()">
+                        </div>
+                        <div class="form-group">
+                            <label>سعر البيع للزبون د.ع *</label>
+                            <input type="number" id="sell_price" required min="0" step="250" placeholder="مثال: 620000" oninput="updateProfitPreview()">
+                        </div>
+                        <div class="form-group">
+                            <label>نوع الضمان الممنوح *</label>
+                            <select id="item_warranty">
+                                <!-- تُملأ ديناميكياً -->
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>الكاشير البائع *</label>
+                            <select id="sale_cashier">
+                                <!-- قائمة الكاشير -->
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>طريقة المحاسبة *</label>
+                            <select id="payment_type" onchange="toggleInstallmentSection()">
+                                <option value="نقد (كاش)">نقد (حاضر / كاش فوري)</option>
+                                <option value="أقساط شهرية">أقساط شهرية ميسرة</option>
+                                <option value="دين آجل">دين آجل</option>
+                            </select>
+                        </div>
+
+                        <!-- تفاصيل الأقساط -->
+                        <div id="installment_box" class="form-grid full-width" style="display: none; background: #f8fafc; border: 1.5px dashed var(--primary-light); padding: 16px; border-radius: 12px;">
+                            <div class="form-group">
+                                <label>الدفعة المقدمة المستلمة (د.ع)</label>
+                                <input type="number" id="inst_down" value="0" min="0" step="250" oninput="recalcInstallment()">
+                            </div>
+                            <div class="form-group">
+                                <label>عدد أشهر التقسيط *</label>
+                                <input type="number" id="inst_months" value="6" min="1" max="60" oninput="recalcInstallment()">
+                            </div>
+                            <div class="form-group">
+                                <label>تاريخ أول دفعة *</label>
+                                <input type="date" id="inst_start_date">
+                            </div>
+                            <div class="form-group">
+                                <label>اسم ورقم هاتف الكفيل</label>
+                                <input type="text" id="inst_guarantor" placeholder="مثال: أحمد عبد الله 07801234567">
+                            </div>
+                        </div>
+
+                        <div class="calc-preview-bar">
+                            <span>صافي الربح المتوقع من هذه الحركة:</span>
+                            <span id="preview-profit-text" class="profit-value">0 د.ع</span>
+                        </div>
+
+                        <div class="form-group full-width" style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px;">
+                            <button type="submit" class="btn btn-primary" style="flex: 2;">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline></svg>
+                                حفظ الحركة وتجهيز الفواتير
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="saveAndGoToInvoice()" style="flex: 1;">
+                                وصل الشراء
+                            </button>
+                            <button type="button" class="btn btn-accent" onclick="saveAndGoToWarranty()" style="flex: 1;">
+                                وصل الضمان
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- 2. قسم ملف وكشف حساب الزبون الشامل (جديد وحصري) -->
+        <section id="tab-customer-dossier" class="tab-view" style="display: none;">
+            <div class="card">
+                <div class="card-header">
+                    <h2>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                        ملف وكشف حساب الزبون الشامل (مشتريات، أقساط، ودفعات)
+                    </h2>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <input type="text" id="dossier_search_input" placeholder="ابحث باسم الزبون أو الهاتف..." oninput="searchCustomerDossier()" style="width: 260px;">
+                        <button class="btn btn-excel" onclick="exportCustomerProfileExcel()">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                            تصدير كشف الزبون إكسل
+                        </button>
+                    </div>
+                </div>
+
+                <!-- البطاقات التلخيصية للزبون المختار -->
+                <div id="customer_profile_container">
+                    <div style="text-align: center; padding: 40px; color: var(--text-muted);">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom: 10px; opacity: 0.5;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        <p style="font-size: 1.1rem; font-weight: 700;">اكتب اسم الزبون أو اختر زبوناً من القائمة لعرض كشف حسابه بالكامل</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. قسم وصل الشراء (A4 / A6) -->
+        <section id="tab-invoice-view" class="tab-view" style="display: none;">
+            <div class="print-toolbar no-print">
+                <div class="size-selector">
+                    <span>اختر حجم طباعة الوصل:</span>
+                    <button class="size-btn active" id="btn-inv-a4" onclick="setInvoiceSize('a4')">A4 (حجم كبير ورقة كاملة)</button>
+                    <button class="size-btn" id="btn-inv-a6" onclick="setInvoiceSize('a6')">A6 (حجم صغير مدمج / إيصال)</button>
+                </div>
+                <button class="btn btn-secondary" onclick="printTarget('tab-invoice-view')">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                    طباعة هذا الوصل الآن
+                </button>
+            </div>
+
+            <div id="invoice-render-box" class="receipt-paper mode-a4">
+                <div class="receipt-header">
+                    <h3>معرض المصطفى للأجهزة المنزلية</h3>
+                    <p>بيع وشراء كافة الأجهزة الكهربائية والمنزلية بالقد والأقساط</p>
+                    <p style="font-size: 0.8rem; color: var(--text-muted);">العنوان: الشارع العام - مجاور البريد | هاتف: 07701234567</p>
+                </div>
+
+                <div class="receipt-meta-box">
+                    <span>رقم القائمة: <strong id="inv_view_id">#MST-1001</strong></span>
+                    <span>التاريخ: <strong id="inv_view_date">2026/08/29</strong></span>
+                    <span>الكاشير: <strong id="inv_view_cashier">مصطفى</strong></span>
+                </div>
+
+                <div class="receipt-line">
+                    <span>اسم الزبون:</span>
+                    <strong id="inv_view_cust">علي جاسم محمد</strong>
+                </div>
+                <div class="receipt-line">
+                    <span>رقم الهاتف:</span>
+                    <span id="inv_view_phone">07712345678</span>
+                </div>
+                <div class="receipt-line">
+                    <span>الجهاز / السلعة:</span>
+                    <strong id="inv_view_item">ثلاجة الحافظ 22 قدم انفيرتر</strong>
+                </div>
+                <div class="receipt-line">
+                    <span>القسم والتصنيف:</span>
+                    <span id="inv_view_cat">ثلاجة</span>
+                </div>
+                <div class="receipt-line">
+                    <span>الرقم التسلسلي (السيريال):</span>
+                    <span id="inv_view_serial" style="font-family: monospace;">SN-8834920</span>
+                </div>
+                <div class="receipt-line">
+                    <span>الضمان المعتمد:</span>
+                    <span id="inv_view_warranty" class="badge badge-success">ضمان سنة شامل</span>
+                </div>
+                <div class="receipt-line">
+                    <span>طريقة البيع:</span>
+                    <strong id="inv_view_payment">نقد (حاضر)</strong>
+                </div>
+
+                <div id="inv_view_installment_extra" style="display: none; margin-top: 8px; background: #f8fafc; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border-color);">
+                    <div class="receipt-line">
+                        <span>الدفعة المقدمة:</span>
+                        <span id="inv_view_down">0 د.ع</span>
+                    </div>
+                    <div class="receipt-line">
+                        <span>القسط الشهري:</span>
+                        <span id="inv_view_monthly">0 د.ع × 6 أشهر</span>
+                    </div>
+                </div>
+
+                <div class="receipt-grand-total">
+                    <span>المبلغ الكلي المستحق:</span>
+                    <span id="inv_view_total">550,000 د.ع</span>
+                </div>
+
+                <div class="receipt-signatures">
+                    <div>
+                        <p>توقيع وختم المعرض</p>
+                        <br>
+                        <p style="border-bottom: 1.5px dotted #64748b; width: 120px; margin: 0 auto;"></p>
+                    </div>
+                    <div>
+                        <p>توقيع المشتري بالاستلام</p>
+                        <br>
+                        <p style="border-bottom: 1.5px dotted #64748b; width: 120px; margin: 0 auto;"></p>
+                    </div>
+                </div>
+
+                <div class="receipt-footer-note">
+                    <p>شكراً لزيارتكم معرض المصطفى • البضاعة المباعة تخضع لشروط الضمان المرفقة</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. قسم وصل وشهادة الضمان (A4 / A6) -->
+        <section id="tab-warranty-view" class="tab-view" style="display: none;">
+            <div class="print-toolbar no-print">
+                <div class="size-selector">
+                    <span>اختر حجم طباعة الضمان:</span>
+                    <button class="size-btn active" id="btn-war-a4" onclick="setWarrantySize('a4')">A4 (حجم كبير كامل)</button>
+                    <button class="size-btn" id="btn-war-a6" onclick="setWarrantySize('a6')">A6 (كارت ضمان مدمج)</button>
+                </div>
+                <button class="btn btn-accent" onclick="printTarget('tab-warranty-view')">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                    طباعة شهادة الضمان
+                </button>
+            </div>
+
+            <div id="warranty-render-box" class="receipt-paper warranty-paper mode-a4">
+                <div class="receipt-header">
+                    <span class="warranty-badge">وثيقة ضمان رسمي ومعتمد</span>
+                    <h3>معرض المصطفى للأجهزة المنزلية</h3>
+                    <p style="color: var(--accent); font-weight: 800;">شهادة فحص وجودة وصيانة ما بعد البيع</p>
+                </div>
+
+                <div class="receipt-meta-box" style="background: #fffbeb; border-color: #fde68a;">
+                    <span>رقم الضمان: <strong id="war_view_id">#WR-1001</strong></span>
+                    <span>تاريخ الشراء: <strong id="war_view_date">2026/08/29</strong></span>
+                </div>
+
+                <div class="receipt-line">
+                    <span>اسم صاحب الجهاز (الزبون):</span>
+                    <strong id="war_view_cust">علي جاسم محمد</strong>
+                </div>
+                <div class="receipt-line">
+                    <span>الجهاز المشمول بالضمان:</span>
+                    <strong id="war_view_item">ثلاجة الحافظ 22 قدم انفيرتر</strong>
+                </div>
+                <div class="receipt-line">
+                    <span>الرقم التسلسلي (S/N):</span>
+                    <strong id="war_view_serial" style="letter-spacing: 1px; color: var(--primary);">SN-8834920</strong>
+                </div>
+                <div class="receipt-line">
+                    <span>نوع ومدة الضمان المعتمد:</span>
+                    <strong id="war_view_type" style="color: var(--secondary);">ضمان سنة كاملة حقيقي شامل الصيانة</strong>
+                </div>
+                <div class="receipt-line">
+                    <span>صالح لغاية تاريخ:</span>
+                    <strong id="war_view_expiry">2027/08/29</strong>
+                </div>
+
+                <div class="warranty-conditions">
+                    <strong>شروط الضمان المعتمدة في معرض المصطفى:</strong>
+                    <ol style="padding-right: 18px; margin-top: 4px;">
+                        <li>يشمل الضمان العيوب المصنعية والأعطال الكهربائية والميكانيكية الناتجة عن الاستخدام الطبيعي.</li>
+                        <li>لا يشمل الكسر وسوء الاستخدام أو التوصيل الكهربائي الخاطئ بدون منظم فولتية.</li>
+                        <li>يجب إبراز هذا الوصل عند طلب الصيانة.</li>
+                    </ol>
+                </div>
+
+                <div class="receipt-signatures" style="align-items: center;">
+                    <div class="stamp-mark">
+                        معرض المصطفى<br>ختم الاعتماد
+                    </div>
+                    <div>
+                        <p>مسؤول الصيانة والضمان</p>
+                        <br>
+                        <p style="border-bottom: 1.5px dotted #d97706; width: 120px; margin: 0 auto;"></p>
+                    </div>
+                </div>
+
+                <div class="receipt-footer-note">
+                    <p>مركز خدمة الزبائن والاستفسار: 07701234567 • رضاكم هدفنا الدائم</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. قسم متابعة الأقساط والديون -->
+        <section id="tab-installments" class="tab-view" style="display: none;">
+            <div class="card">
+                <div class="card-header">
+                    <h2>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
+                        سجل ومتابعة أقساط الزبائن والديون المستحقة
+                    </h2>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                        <button class="btn btn-excel" onclick="exportMasterInstallmentsExcel()">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                            تصدير كشف الأقساط إكسل
+                        </button>
+                        <span class="badge badge-warning" id="total_debts_badge" style="font-size: 0.9rem; padding: 6px 14px;">إجمالي الديون بالسوق: 0 د.ع</span>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>اسم الزبون والهاتف</th>
+                                <th>الجهاز والقسم</th>
+                                <th>المبلغ الكلي</th>
+                                <th>المقدمة</th>
+                                <th>القسط الشهري</th>
+                                <th>الدين المتبقي</th>
+                                <th>تاريخ أول دفعة</th>
+                                <th>تاريخ آخر دفعة</th>
+                                <th>الأشهر المسددة</th>
+                                <th>الحالة</th>
+                                <th>تسديد شهر</th>
+                                <th>ملف الزبون</th>
+                            </tr>
+                        </thead>
+                        <tbody id="installment_table_rows">
+                            <!-- بيانات الأقساط -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- 6. قسم الأرباح والتقارير المالية -->
+        <section id="tab-reports" class="tab-view" style="display: none;">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span class="stat-label">مبيعات اليوم الإجمالية</span>
+                    <span class="stat-number" id="rep_today_sales">0 د.ع</span>
+                    <span class="stat-footnote" id="rep_today_count">0 حركات مسجلة</span>
+                </div>
+                <div class="stat-card green">
+                    <span class="stat-label">صافي أرباح اليوم</span>
+                    <span class="stat-number" id="rep_today_profit" style="color: var(--secondary);">0 د.ع</span>
+                    <span class="stat-footnote">الربح الفعلي لليوم</span>
+                </div>
+                <div class="stat-card amber">
+                    <span class="stat-label">مبيعات الأسبوع</span>
+                    <span class="stat-number" id="rep_week_sales">0 د.ع</span>
+                    <span class="stat-footnote">آخر 7 أيام عمل</span>
+                </div>
+                <div class="stat-card green">
+                    <span class="stat-label">صافي أرباح الأسبوع</span>
+                    <span class="stat-number" id="rep_week_profit" style="color: var(--secondary);">0 د.ع</span>
+                    <span class="stat-footnote">مجموع ربح الأسبوع</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">مبيعات الشهر الحالي</span>
+                    <span class="stat-number" id="rep_month_sales">0 د.ع</span>
+                    <span class="stat-footnote">خلال الشهر الجاري</span>
+                </div>
+                <div class="stat-card green">
+                    <span class="stat-label">صافي أرباح الشهر</span>
+                    <span class="stat-number" id="rep_month_profit" style="color: var(--secondary);">0 د.ع</span>
+                    <span class="stat-footnote">المتحقق شهرياً</span>
+                </div>
+                <div class="stat-card red">
+                    <span class="stat-label">ديون الأقساط بالسوق</span>
+                    <span class="stat-number" id="rep_total_debts" style="color: var(--danger);">0 د.ع</span>
+                    <span class="stat-footnote">مبالغ بذمة الزبائن</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2>تحليل مبيعات الأقسام في المعرض</h2>
+                </div>
+                <div class="form-grid" id="category_summary_boxes">
+                    <!-- كروت الأقسام ديناميكياً -->
+                </div>
+            </div>
+        </section>
+
+        <!-- 7. قسم أرشيف الفواتير السابقة -->
+        <section id="tab-history" class="tab-view" style="display: none;">
+            <div class="card">
+                <div class="card-header">
+                    <h2>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
+                        أرشيف الفواتير والمبيعات السابقة
+                    </h2>
+                    <input type="text" id="history_search_input" placeholder="بحث باسم الزبون أو الجهاز أو السيريال..." oninput="filterSalesHistory()" style="width: 280px;">
+                </div>
+
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>رقم الوصل</th>
+                                <th>التاريخ</th>
+                                <th>الزبون</th>
+                                <th>الجهاز والقسم</th>
+                                <th>سعر الشراء</th>
+                                <th>سعر البيع</th>
+                                <th>الربح</th>
+                                <th>نوع الدفع</th>
+                                <th>الكاشير</th>
+                                <th>إجراء</th>
+                            </tr>
+                        </thead>
+                        <tbody id="history_table_rows">
+                            <!-- سجل الحركات -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- 8. لوحة تحكم الإدارة والإعدادات (محمية برمز الإدارة) -->
+        <section id="tab-admin" class="tab-view" style="display: none;">
+            <div class="card">
+                <div class="card-header">
+                    <h2>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                        لوحة تحكم المدير والإعدادات المتقدمة
+                    </h2>
+                    <button class="btn btn-danger" onclick="lockAdminPanel()">قفل لوحة الإدارة</button>
+                </div>
+
+                <div class="form-grid">
+                    <div class="card" style="margin: 0; box-shadow: none; border-color: var(--border-color);">
+                        <div class="card-header">
+                            <h3>طاقم الكاشير والمبيعات</h3>
+                            <button class="btn btn-primary" style="padding: 6px 12px; font-size: 0.8rem;" onclick="openAddCashierModal()">+ كاشير جديد</button>
+                        </div>
+                        <ul id="cashiers_list_ui" style="list-style: none; display: flex; flex-direction: column; gap: 8px;">
+                            <!-- قائمة الكاشير -->
+                        </ul>
+                    </div>
+
+                    <div class="card" style="margin: 0; box-shadow: none; border-color: var(--border-color);">
+                        <div class="card-header">
+                            <h3>أقسام المعرض</h3>
+                            <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem;" onclick="openCategoryModal()">+ قسم جديد</button>
+                        </div>
+                        <div id="admin_categories_list" style="display: flex; flex-wrap: wrap; gap: 6px;">
+                            <!-- وسوم الأقسام -->
+                        </div>
+                    </div>
+
+                    <div class="card" style="margin: 0; box-shadow: none; border-color: var(--border-color);">
+                        <div class="card-header">
+                            <h3>أنواع وباقات الضمان</h3>
+                            <button class="btn btn-accent" style="padding: 6px 12px; font-size: 0.8rem;" onclick="openWarrantyModal()">+ ضمان جديد</button>
+                        </div>
+                        <ul id="admin_warranties_list" style="list-style: none; display: flex; flex-direction: column; gap: 6px; font-size: 0.88rem;">
+                            <!-- قائمة الضمانات -->
+                        </ul>
+                    </div>
+
+                    <div class="card" style="margin: 0; box-shadow: none; border-color: var(--border-color);">
+                        <div class="card-header">
+                            <h3>تغيير رمز الإدارة الخاص (PIN)</h3>
+                        </div>
+                        <div class="form-group">
+                            <label>الرمز السري الجديد</label>
+                            <input type="password" id="new_admin_pin" placeholder="مثال: 5566">
+                        </div>
+                        <button class="btn btn-outline" style="margin-top: 10px;" onclick="changeAdminPin()">حفظ الرمز السري الجديد</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- النوافذ المنبثقة (Modals) -->
+
+    <!-- نافذة طلب الرمز السري للإدارة -->
+    <div class="modal-backdrop" id="modal-auth">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3>دخول لوحة تحكم الإدارة</h3>
+                <button class="drawer-close-btn" style="color:#000;" onclick="closeModal('modal-auth')">✕</button>
+            </div>
+            <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 12px;">أدخل رمز الإدارة السري (الافتراضي: 1234)</p>
+            <div class="form-group">
+                <label>رمز الإدارة (PIN)</label>
+                <input type="password" id="admin_input_pin" placeholder="****" style="font-size: 1.2rem; text-align: center; letter-spacing: 4px;">
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-outline" onclick="closeModal('modal-auth')">إلغاء</button>
+                <button class="btn btn-primary" onclick="verifyAdminPin()">تأكيد الدخول</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- نافذة إضافة قسم جديد -->
+    <div class="modal-backdrop" id="modal-category">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3>إضافة قسم جديد للمعرض</h3>
+                <button class="drawer-close-btn" style="color:#000;" onclick="closeModal('modal-category')">✕</button>
+            </div>
+            <div class="form-group">
+                <label>اسم القسم الجديد *</label>
+                <input type="text" id="new_category_name" placeholder="مثال: شاشات سمارت، فلاتر مياه، مكانس...">
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-outline" onclick="closeModal('modal-category')">إلغاء</button>
+                <button class="btn btn-secondary" onclick="saveNewCategory()">حفظ القسم</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- نافذة إضافة ضمان جديد -->
+    <div class="modal-backdrop" id="modal-warranty">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3>إضافة باقة ضمان جديدة</h3>
+                <button class="drawer-close-btn" style="color:#000;" onclick="closeModal('modal-warranty')">✕</button>
+            </div>
+            <div class="form-group">
+                <label>نص وتفاصيل الضمان *</label>
+                <input type="text" id="new_warranty_text" placeholder="مثال: ضمان 5 سنوات على الماطور والكمبريسور">
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-outline" onclick="closeModal('modal-warranty')">إلغاء</button>
+                <button class="btn btn-accent" onclick="saveNewWarranty()">حفظ باقة الضمان</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- نافذة إضافة كاشير جديد -->
+    <div class="modal-backdrop" id="modal-cashier">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3>إضافة كاشير / موظف مبيعات جديد</h3>
+                <button class="drawer-close-btn" style="color:#000;" onclick="closeModal('modal-cashier')">✕</button>
+            </div>
+            <div class="form-group">
+                <label>اسم الموظف / الكاشير *</label>
+                <input type="text" id="new_cashier_name" placeholder="مثال: كرار أحمد">
+            </div>
+            <div class="form-group" style="margin-top: 8px;">
+                <label>رقم الهاتف</label>
+                <input type="tel" id="new_cashier_phone" placeholder="07XXXXXXXXX">
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-outline" onclick="closeModal('modal-cashier')">إلغاء</button>
+                <button class="btn btn-primary" onclick="saveNewCashier()">حفظ الكاشير</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- نافذة دفع قسط مع تسجيل التاريخ والمبلغ -->
+    <div class="modal-backdrop" id="modal-pay-installment">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3>تسجيل دفعة قسط للزبون</h3>
+                <button class="drawer-close-btn" style="color:#000;" onclick="closeModal('modal-pay-installment')">✕</button>
+            </div>
+            <div class="form-group">
+                <label>اسم الزبون والجهاز</label>
+                <input type="text" id="pay_inst_title" disabled style="background:#f1f5f9; font-weight:700;">
+            </div>
+            <div class="form-group" style="margin-top: 8px;">
+                <label>مبلغ القسط المستحق (د.ع) *</label>
+                <input type="number" id="pay_inst_amount" min="1000" step="250">
+            </div>
+            <div class="form-group" style="margin-top: 8px;">
+                <label>تاريخ استلام الدفعة *</label>
+                <input type="date" id="pay_inst_date">
+            </div>
+            <div class="form-group" style="margin-top: 8px;">
+                <label>ملاحظات الاستلام</label>
+                <input type="text" id="pay_inst_notes" placeholder="مثال: سدد قسط شهر أيلول نقداً بالكاشير">
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-outline" onclick="closeModal('modal-pay-installment')">إلغاء</button>
+                <button class="btn btn-secondary" onclick="confirmInstallmentPayment()">تأكيد الاستلام والخصم</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- شريط الإشعارات السريعة (Toast) -->
+    <div id="toast-container">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        <span id="toast-message">تمت العملية بنجاح!</span>
+    </div>
+
+    <!-- كود الجافاسكربت المتكامل -->
+    <script>
+        // كائن حالة النظام المالي والزبائن
+        const appState = {
+            adminPin: "1234",
+            activeCashier: "مصطفى (المدير)",
+            cashiers: [
+                { id: 1, name: "مصطفى (المدير)", phone: "07701234567", role: "مدير المعرض" },
+                { id: 2, name: "علي الكاشير", phone: "07801122334", role: "موظف مبيعات" }
+            ],
+            categories: [
+                "ثلاجة",
+                "سبليت ومكيف",
+                "مبردة هواء",
+                "تنور (غازي وكهربائي)",
+                "كلوبات وإضاءة",
+                "ريموت كنترول وشواحن",
+                "شاشة وتلفزيون",
+                "غسالة ملابس",
+                "أجهزة مطبخ ومنزل"
+            ],
+            warranties: [
+                "ضمان سنة كاملة حقيقي شامل القطع والصيانة",
+                "ضمان سنتين على الكمبريسور والماطور",
+                "ضمان 6 أشهر استبدال وصيانة موقعية",
+                "ضمان 3 سنوات صيانة مجانية",
+                "ضمان فحص وتشغيل 7 أيام",
+                "بدون ضمان"
+            ],
+            sales: [
+                // مثال: الزبون حيدر كريم اشترى أكثر من جهاز (حاضر + أقساط متعددة)
+                {
+                    id: "MST-1001",
+                    date: "2026-08-10",
+                    customer: "حيدر كريم جاسم",
+                    phone: "07712345678",
+                    category: "تنور (غازي وكهربائي)",
+                    model: "تنور غاز ستيل تركي بابين حراري",
+                    serial: "TN-99201",
+                    costPrice: 120000,
+                    sellPrice: 160000,
+                    profit: 40000,
+                    warranty: "ضمان 6 أشهر استبدال وصيانة موقعية",
+                    cashier: "مصطفى (المدير)",
+                    paymentType: "نقد (كاش)",
+                    installment: null
+                },
+                {
+                    id: "MST-1002",
+                    date: "2026-08-15",
+                    customer: "حيدر كريم جاسم",
+                    phone: "07712345678",
+                    category: "سبليت ومكيف",
+                    model: "سبليت ميديا 2 طن T3 استوائي",
+                    serial: "SP-441092",
+                    costPrice: 650000,
+                    sellPrice: 800000,
+                    profit: 150000,
+                    warranty: "ضمان سنتين على الكمبريسور والماطور",
+                    cashier: "مصطفى (المدير)",
+                    paymentType: "أقساط شهرية",
+                    installment: {
+                        downPayment: 200000,
+                        totalDebt: 600000,
+                        remaining: 400000,
+                        months: 6,
+                        monthlyAmount: 100000,
+                        firstDate: "2026-09-01",
+                        lastDate: "2027-02-01",
+                        paidMonths: 2,
+                        paymentHistory: [
+                            { date: "2026-08-15", amount: 200000, note: "دفعة مقدمة عند الاستلام" },
+                            { date: "2026-09-01", amount: 100000, note: "قسط شهر 1" },
+                            { date: "2026-09-28", amount: 100000, note: "قسط شهر 2" }
+                        ],
+                        guarantor: "أحمد عبد الله 07801234567",
+                        status: "نشط"
+                    }
+                },
+                {
+                    id: "MST-1003",
+                    date: "2026-08-25",
+                    customer: "حيدر كريم جاسم",
+                    phone: "07712345678",
+                    category: "مبردة هواء",
+                    model: "مبردة لؤلؤة الخليج 6000 بلاستيك",
+                    serial: "MB-1199",
+                    costPrice: 180000,
+                    sellPrice: 240000,
+                    profit: 60000,
+                    warranty: "ضمان سنة كاملة حقيقي شامل القطع والصيانة",
+                    cashier: "علي الكاشير",
+                    paymentType: "أقساط شهرية",
+                    installment: {
+                        downPayment: 60000,
+                        totalDebt: 180000,
+                        remaining: 180000,
+                        months: 3,
+                        monthlyAmount: 60000,
+                        firstDate: "2026-09-10",
+                        lastDate: "2026-11-10",
+                        paidMonths: 0,
+                        paymentHistory: [
+                            { date: "2026-08-25", amount: 60000, note: "دفعة مقدمة عند الاستلام" }
+                        ],
+                        guarantor: "أحمد عبد الله 07801234567",
+                        status: "نشط"
+                    }
+                },
+                {
+                    id: "MST-1004",
+                    date: "2026-08-28",
+                    customer: "سعد التميمي",
+                    phone: "07509988776",
+                    category: "ثلاجة",
+                    model: "ثلاجة الحافظ 22 قدم انفيرتر بخاخ",
+                    serial: "SN-998231",
+                    costPrice: 480000,
+                    sellPrice: 590000,
+                    profit: 110000,
+                    warranty: "ضمان سنة كاملة حقيقي شامل القطع والصيانة",
+                    cashier: "مصطفى (المدير)",
+                    paymentType: "نقد (كاش)",
+                    installment: null
+                }
+            ],
+            selectedSaleIndex: 0,
+            activePayingSaleId: null,
+            currentDossierCustomer: "حيدر كريم جاسم"
+        };
+
+        // التهيئة عند تشغيل الصفحة
+        window.addEventListener('DOMContentLoaded', () => {
+            initClock();
+            initDatePickers();
+            populateCategorySelects();
+            populateWarrantySelects();
+            populateCashierSelects();
+            refreshCustomerDatalist();
+            renderAllViews();
+            updateProfitPreview();
+            
+            // فتح كشف حساب للزبون التجريبي مباشرة للتوضيح
+            renderCustomerDossier("حيدر كريم جاسم");
+        });
+
+        // تشغيل الساعة الحية
+        function initClock() {
+            const clockEl = document.getElementById('current-clock');
+            setInterval(() => {
+                const now = new Date();
+                clockEl.innerText = now.toLocaleTimeString('ar-IQ', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            }, 1000);
+        }
+
+        function initDatePickers() {
+            const today = new Date();
+            const nextMonth = new Date(today);
+            nextMonth.setMonth(nextMonth.getMonth() + 1);
+            
+            const startDateInput = document.getElementById('inst_start_date');
+            if (startDateInput) {
+                startDateInput.value = nextMonth.toISOString().split('T')[0];
+            }
+
+            const payDate = document.getElementById('pay_inst_date');
+            if (payDate) {
+                payDate.value = today.toISOString().split('T')[0];
+            }
+        }
+
+        function toggleSidebar() {
+            document.getElementById('sidebarDrawer').classList.toggle('active');
+            document.getElementById('sidebarOverlay').classList.toggle('active');
+        }
+
+        function switchSection(sectionId) {
+            document.querySelectorAll('.tab-view').forEach(view => {
+                view.style.display = 'none';
+            });
+            document.querySelectorAll('.menu-item').forEach(item => {
+                item.classList.remove('active');
+            });
+
+            const target = document.getElementById(sectionId);
+            if (target) {
+                target.style.display = 'block';
+            }
+
+            const menuBtns = Array.from(document.querySelectorAll('.menu-item'));
+            const matched = menuBtns.find(btn => btn.getAttribute('onclick')?.includes(sectionId));
+            if (matched) matched.classList.add('active');
+
+            document.getElementById('sidebarDrawer').classList.remove('active');
+            document.getElementById('sidebarOverlay').classList.remove('active');
+        }
+
+        // تحديث قائمة الأسماء التلقائية عند إدخال بيع
+        function refreshCustomerDatalist() {
+            const datalist = document.getElementById('customers_datalist');
+            datalist.innerHTML = '';
+            const uniqueNames = [...new Set(appState.sales.map(s => s.customer))];
+            uniqueNames.forEach(name => {
+                const opt = document.createElement('option');
+                opt.value = name;
+                datalist.appendChild(opt);
+            });
+        }
+
+        function autoFillCustomerPhone() {
+            const name = document.getElementById('cust_name').value.trim();
+            const existing = appState.sales.find(s => s.customer === name && s.phone && s.phone !== 'غير مسجل');
+            if (existing) {
+                document.getElementById('cust_phone').value = existing.phone;
+            }
+        }
+
+        // دالة كشف حساب وملف الزبون الشامل
+        function searchCustomerDossier() {
+            const query = document.getElementById('dossier_search_input').value.trim();
+            if (!query) {
+                if (appState.currentDossierCustomer) {
+                    renderCustomerDossier(appState.currentDossierCustomer);
+                }
+                return;
+            }
+            renderCustomerDossier(query);
+        }
+
+        function openCustomerProfile(customerName) {
+            appState.currentDossierCustomer = customerName;
+            document.getElementById('dossier_search_input').value = customerName;
+            renderCustomerDossier(customerName);
+            switchSection('tab-customer-dossier');
+        }
+
+        function renderCustomerDossier(customerQuery) {
+            const container = document.getElementById('customer_profile_container');
+            if (!customerQuery) {
+                container.innerHTML = `<div style="text-align: center; padding: 40px; color: var(--text-muted);"><p>يرجى كتابة اسم الزبون للبحث</p></div>`;
+                return;
+            }
+
+            // تصفية حركات الزبون
+            const customerSales = appState.sales.filter(s => 
+                s.customer.includes(customerQuery) || s.phone.includes(customerQuery)
+            );
+
+            if (customerSales.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px; background:#fff; border-radius:12px; border:1px dashed var(--border-color);">
+                        <p style="color:var(--danger); font-weight:800; font-size:1.1rem;">لا توجد أي مشتريات مسجلة باسم (${customerQuery})</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const primaryCustName = customerSales[0].customer;
+            const primaryCustPhone = customerSales[0].phone;
+            appState.currentDossierCustomer = primaryCustName;
+
+            let totalSpent = 0;
+            let totalRemainingDebt = 0;
+            let cashItemsCount = 0;
+            let installmentItemsCount = 0;
+
+            customerSales.forEach(s => {
+                totalSpent += s.sellPrice;
+                if (s.installment) {
+                    installmentItemsCount++;
+                    totalRemainingDebt += s.installment.remaining;
+                } else {
+                    cashItemsCount++;
+                }
+            });
+
+            let html = `
+                <div class="profile-overview-cards">
+                    <div class="profile-stat-box" style="border-right: 5px solid var(--primary);">
+                        <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700;">اسم الزبون والهاتف</span>
+                        <strong style="font-size: 1.15rem; color: var(--primary-dark);">${primaryCustName}</strong>
+                        <small style="color: var(--text-muted);">${primaryCustPhone}</small>
+                    </div>
+                    <div class="profile-stat-box">
+                        <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700;">إجمالي المشتريات من المعرض</span>
+                        <strong style="font-size: 1.25rem; color: var(--primary);">${totalSpent.toLocaleString()} د.ع</strong>
+                        <small>${customerSales.length} أجهزة مشتراة (${cashItemsCount} نقد / ${installmentItemsCount} أقساط)</small>
+                    </div>
+                    <div class="profile-stat-box ${totalRemainingDebt > 0 ? 'highlight' : ''}">
+                        <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700;">إجمالي الديون المتبقية بذمته</span>
+                        <strong style="font-size: 1.25rem; color: ${totalRemainingDebt > 0 ? 'var(--danger)' : 'var(--secondary)'};">${totalRemainingDebt.toLocaleString()} د.ع</strong>
+                        <small>${totalRemainingDebt === 0 ? 'مسدد كافة الديون بالكامل ✓' : 'عليه مبالغ أقساط مستحقة'}</small>
+                    </div>
+                </div>
+
+                <h3 style="font-size: 1.1rem; font-weight: 800; color: var(--primary-dark); margin-bottom: 12px;">سجل وتفاصيل كل جهاز اشتراه هذا الزبون:</h3>
+            `;
+
+            customerSales.forEach((sale, idx) => {
+                const isInst = sale.installment !== null;
+                const inst = sale.installment;
+
+                let instProgressHtml = '';
+                let paymentsHistoryHtml = '';
+
+                if (isInst) {
+                    const percent = Math.round((inst.paidMonths / inst.months) * 100);
+                    const isFullyPaid = inst.paidMonths >= inst.months || inst.remaining <= 0;
+
+                    instProgressHtml = `
+                        <div style="background: #f8fafc; padding: 12px; border-radius: 8px; margin-top: 10px; border: 1px solid var(--border-color);">
+                            <div style="display: flex; justify-content: space-between; font-weight: 700; font-size: 0.88rem; flex-wrap: wrap; gap: 8px;">
+                                <span>القسط الشهري: <strong style="color:var(--primary);">${inst.monthlyAmount.toLocaleString()} د.ع</strong></span>
+                                <span>المسدد: <strong>${inst.paidMonths} من ${inst.months} أشهر</strong> (${percent}%)</span>
+                                <span>المتبقي بالدين: <strong style="color:var(--danger); font-size:1rem;">${inst.remaining.toLocaleString()} د.ع</strong></span>
+                                <span>تاريخ أول دفعة: <strong>${inst.firstDate}</strong> | تاريخ آخر دفعة: <strong>${inst.lastDate}</strong></span>
+                            </div>
+                            <div class="progress-track">
+                                <div class="progress-fill" style="width: ${percent}%;"></div>
+                            </div>
+                        </div>
+                    `;
+
+                    // سجل الدفعات وتواريخها
+                    const historyLogs = inst.paymentHistory || [];
+                    let logsBadges = historyLogs.map(p => 
+                        `<span class="payment-log-badge">📅 ${p.date}: ${p.amount.toLocaleString()} د.ع (${p.note})</span>`
+                    ).join('');
+
+                    paymentsHistoryHtml = `
+                        <div class="payments-timeline">
+                            <strong>سجل وتواريخ دفعات هذا الجهاز:</strong><br>
+                            ${logsBadges || '<span style="color:var(--text-muted);">لم تسجل دفعات بعد</span>'}
+                        </div>
+                    `;
+                }
+
+                html += `
+                    <div class="item-purchase-card">
+                        <div class="item-card-header">
+                            <div>
+                                <span class="badge ${isInst ? 'badge-warning' : 'badge-success'}" style="margin-left: 6px;">${isInst ? 'شراء بالأقساط' : 'شراء حاضر (نقد)'}</span>
+                                <strong style="font-size: 1.1rem; color: var(--primary-dark);">${sale.model}</strong>
+                                <span class="badge badge-info" style="margin-right: 4px;">${sale.category}</span>
+                            </div>
+                            <div style="font-size: 0.85rem; color: var(--text-muted); font-weight: 700;">
+                                وصل رقم: #${sale.id} | تاريخ الشراء: ${sale.date}
+                            </div>
+                        </div>
+
+                        <div style="display: flex; justify-content: space-between; font-size: 0.9rem; flex-wrap: wrap; gap: 10px; border-bottom: 1px dashed var(--border-color); padding-bottom: 8px;">
+                            <span>السيريال نمبر: <code style="background:#f1f5f9; padding:2px 6px; border-radius:4px;">${sale.serial}</code></span>
+                            <span>سعر البيع: <strong>${sale.sellPrice.toLocaleString()} د.ع</strong></span>
+                            <span>الضمان: <strong style="color:var(--secondary);">${sale.warranty}</strong></span>
+                            <span>الكاشير: <small>${sale.cashier}</small></span>
+                        </div>
+
+                        ${instProgressHtml}
+                        ${paymentsHistoryHtml}
+
+                        <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px;">
+                            <button class="btn btn-outline" style="padding: 6px 12px; font-size: 0.82rem;" onclick="viewHistoricInvoice('${sale.id}')">عرض وصل الشراء</button>
+                            <button class="btn btn-outline" style="padding: 6px 12px; font-size: 0.82rem; color:var(--accent); border-color:var(--accent);" onclick="viewHistoricWarranty('${sale.id}')">عرض وصل الضمان</button>
+                            ${isInst && inst.remaining > 0 ? `
+                                <button class="btn btn-secondary" style="padding: 6px 14px; font-size: 0.82rem;" onclick="openPaymentModal('${sale.id}')">
+                                    💰 تسديد دفعة / قسط لهذا الجهاز
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        // نافذة تسجيل دفعة القسط
+        function openPaymentModal(saleId) {
+            const sale = appState.sales.find(s => s.id === saleId);
+            if (!sale || !sale.installment) return;
+
+            appState.activePayingSaleId = saleId;
+            document.getElementById('pay_inst_title').value = `${sale.customer} - ${sale.model} (المتبقي: ${sale.installment.remaining.toLocaleString()} د.ع)`;
+            document.getElementById('pay_inst_amount').value = sale.installment.monthlyAmount;
+            openModal('modal-pay-installment');
+        }
+
+        function confirmInstallmentPayment() {
+            const saleId = appState.activePayingSaleId;
+            const sale = appState.sales.find(s => s.id === saleId);
+            if (!sale || !sale.installment) return;
+
+            const inst = sale.installment;
+            const payAmount = parseFloat(document.getElementById('pay_inst_amount').value) || 0;
+            const payDate = document.getElementById('pay_inst_date').value || new Date().toISOString().split('T')[0];
+            const payNote = document.getElementById('pay_inst_notes').value.trim() || `تسديد قسط شهر`;
+
+            if (payAmount <= 0) {
+                showToast("يرجى إدخال مبلغ صحيح للدفعة!");
+                return;
+            }
+
+            inst.paidMonths++;
+            inst.remaining = Math.max(0, inst.remaining - payAmount);
+            if (!inst.paymentHistory) inst.paymentHistory = [];
+            
+            inst.paymentHistory.push({
+                date: payDate,
+                amount: payAmount,
+                note: payNote
+            });
+
+            if (inst.paidMonths >= inst.months || inst.remaining <= 0) {
+                inst.status = "مسدد بالكامل";
+                inst.remaining = 0;
+                showToast(`تم تسديد كامل أقساط الجهاز للزبون (${sale.customer})!`);
+            } else {
+                showToast(`تم استلام ${payAmount.toLocaleString()} د.ع بنجاح وتحديث كشف حساب الزبون.`);
+            }
+
+            closeModal('modal-pay-installment');
+            renderAllViews();
+            renderCustomerDossier(sale.customer);
+        }
+
+        // ==========================================
+        // محرك تصدير ملفات الإكسل الملونة والمنسقة (Excel)
+        // ==========================================
+        function exportMasterInstallmentsExcel() {
+            const today = new Date().toLocaleDateString('ar-IQ');
+            
+            let tableHtml = `
+                <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+                <head>
+                    <meta charset="utf-8">
+                    <!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>كشف الأقساط والديون</x:Name><x:WorksheetOptions><x:DisplayRightToLeft/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->
+                    <style>
+                        body { font-family: 'Arial', sans-serif; direction: rtl; }
+                        table { border-collapse: collapse; width: 100%; text-align: center; }
+                        th { background-color: #1e3a8a; color: #ffffff; padding: 10px; font-weight: bold; border: 1px solid #000; font-size: 14px; }
+                        td { border: 1px solid #cbd5e1; padding: 8px; font-size: 12px; }
+                        .inst-row { background-color: #f8fafc; }
+                        .inst-alt { background-color: #ffffff; }
+                        .debt-cell { color: #b91c1c; font-weight: bold; }
+                        .paid-cell { color: #15803d; font-weight: bold; }
+                        .title-row { background-color: #0f172a; color: #ffffff; font-size: 16px; font-weight: bold; }
+                        .summary-row { background-color: #eff6ff; font-weight: bold; }
+                    </style>
+                </head>
+                <body>
+                    <table>
+                        <tr>
+                            <td colspan="12" class="title-row" style="padding: 15px;">معرض المصطفى للأجهزة المنزلية - كشف الأقساط والديون الشامل (${today})</td>
+                        </tr>
+                        <tr>
+                            <th>رقم الوصل</th>
+                            <th>تاريخ البيع</th>
+                            <th>اسم الزبون</th>
+                            <th>رقم الهاتف</th>
+                            <th>الجهاز والموديل</th>
+                            <th>القسم</th>
+                            <th>سعر البيع (د.ع)</th>
+                            <th>المقدمة (د.ع)</th>
+                            <th>القسط الشهري (د.ع)</th>
+                            <th>الدين المتبقي (د.ع)</th>
+                            <th>الأشهر المسددة</th>
+                            <th>حالة السداد</th>
+                        </tr>
+            `;
+
+            let totalSalesSum = 0;
+            let totalDebtsSum = 0;
+
+            appState.sales.forEach((sale, i) => {
+                const isInst = sale.installment !== null;
+                const inst = sale.installment;
+                const rowClass = i % 2 === 0 ? 'inst-row' : 'inst-alt';
+
+                totalSalesSum += sale.sellPrice;
+                if (isInst) totalDebtsSum += inst.remaining;
+
+                tableHtml += `
+                    <tr class="${rowClass}">
+                        <td>#${sale.id}</td>
+                        <td>${sale.date}</td>
+                        <td style="font-weight: bold;">${sale.customer}</td>
+                        <td>${sale.phone}</td>
+                        <td>${sale.model}</td>
+                        <td>${sale.category}</td>
+                        <td style="font-weight: bold;">${sale.sellPrice.toLocaleString()}</td>
+                        <td>${isInst ? inst.downPayment.toLocaleString() : '0'}</td>
+                        <td>${isInst ? inst.monthlyAmount.toLocaleString() : '-'}</td>
+                        <td class="${isInst && inst.remaining > 0 ? 'debt-cell' : 'paid-cell'}">${isInst ? inst.remaining.toLocaleString() : '0'}</td>
+                        <td>${isInst ? `${inst.paidMonths} من ${inst.months}` : 'نقد كاش'}</td>
+                        <td class="${isInst && inst.remaining > 0 ? 'debt-cell' : 'paid-cell'}">${isInst ? inst.status : 'مسدد كاش'}</td>
+                    </tr>
+                `;
+            });
+
+            tableHtml += `
+                        <tr class="summary-row">
+                            <td colspan="6" style="text-align: right; padding: 10px;">المجموع الإجمالي:</td>
+                            <td>${totalSalesSum.toLocaleString()} د.ع</td>
+                            <td colspan="2"></td>
+                            <td class="debt-cell">${totalDebtsSum.toLocaleString()} د.ع</td>
+                            <td colspan="2">إجمالي الديون بالسوق</td>
+                        </tr>
+                    </table>
+                </body>
+                </html>
+            `;
+
+            downloadExcelFile(tableHtml, `كشف_أقساط_معرض_المصطفى_${new Date().toISOString().split('T')[0]}.xls`);
+            showToast("تم توليد وتحميل ملف الإكسل الملون بنجاح!");
+        }
+
+        // تصدير كشف حساب الزبون المختار بملف إكسل
+        function exportCustomerProfileExcel() {
+            if (!appState.currentDossierCustomer) {
+                showToast("يرجى اختيار زبون أولاً للتصدير!");
+                return;
+            }
+
+            const custSales = appState.sales.filter(s => s.customer === appState.currentDossierCustomer);
+            if (custSales.length === 0) return;
+
+            let tableHtml = `
+                <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+                <head>
+                    <meta charset="utf-8">
+                    <!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>كشف حساب الزبون</x:Name><x:WorksheetOptions><x:DisplayRightToLeft/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->
+                    <style>
+                        body { font-family: 'Arial', sans-serif; direction: rtl; }
+                        table { border-collapse: collapse; width: 100%; text-align: center; }
+                        th { background-color: #059669; color: #ffffff; padding: 10px; font-weight: bold; border: 1px solid #000; }
+                        td { border: 1px solid #cbd5e1; padding: 8px; }
+                        .title-box { background-color: #1e3a8a; color: #ffffff; font-size: 15px; font-weight: bold; padding: 12px; }
+                    </style>
+                </head>
+                <body>
+                    <table>
+                        <tr>
+                            <td colspan="9" class="title-box">كشف حساب مشتريات الزبون: ${appState.currentDossierCustomer} (هاتف: ${custSales[0].phone})</td>
+                        </tr>
+                        <tr>
+                            <th>رقم الوصل</th>
+                            <th>تاريخ الشراء</th>
+                            <th>الجهاز المشتري</th>
+                            <th>القسم</th>
+                            <th>سعر البيع (د.ع)</th>
+                            <th>طريقة الشراء</th>
+                            <th>القسط الشهري</th>
+                            <th>المتبقي بذمته</th>
+                            <th>الضمان المعتمد</th>
+                        </tr>
+            `;
+
+            custSales.forEach(s => {
+                const isInst = s.installment !== null;
+                tableHtml += `
+                    <tr>
+                        <td>#${s.id}</td>
+                        <td>${s.date}</td>
+                        <td style="font-weight:bold;">${s.model}</td>
+                        <td>${s.category}</td>
+                        <td>${s.sellPrice.toLocaleString()}</td>
+                        <td>${s.paymentType}</td>
+                        <td>${isInst ? s.installment.monthlyAmount.toLocaleString() : '-'}</td>
+                        <td style="color:${isInst && s.installment.remaining > 0 ? '#b91c1c' : '#15803d'}; font-weight:bold;">${isInst ? s.installment.remaining.toLocaleString() : '0'}</td>
+                        <td>${s.warranty}</td>
+                    </tr>
+                `;
+            });
+
+            tableHtml += `
+                    </table>
+                </body>
+                </html>
+            `;
+
+            downloadExcelFile(tableHtml, `كشف_حساب_${appState.currentDossierCustomer.replace(/\s+/g, '_')}.xls`);
+            showToast(`تم تحميل كشف حساب الزبون (${appState.currentDossierCustomer}) إكسل!`);
+        }
+
+        function downloadExcelFile(htmlContent, fileName) {
+            const blob = new Blob([htmlContent], { type: 'application/vnd.ms-excel;charset=utf-8' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // التحقق من رمز الإدارة
+        function openAdminSettingsWithAuth() {
+            openModal('modal-auth');
+        }
+
+        function verifyAdminPin() {
+            const entered = document.getElementById('admin_input_pin').value;
+            if (entered === appState.adminPin) {
+                closeModal('modal-auth');
+                document.getElementById('admin_input_pin').value = '';
+                switchSection('tab-admin');
+                renderAdminSettingsUI();
+                showToast("مرحباً بك في لوحة تحكم المدير!");
+            } else {
+                showToast("رمز الإدارة غير صحيح! يرجى المحاولة مرة أخرى.");
+            }
+        }
+
+        function lockAdminPanel() {
+            switchSection('tab-pos');
+            showToast("تم قفل لوحة تحكم المدير بنجاح.");
+        }
+
+        function changeAdminPin() {
+            const newPin = document.getElementById('new_admin_pin').value.trim();
+            if (newPin.length < 3) {
+                showToast("يرجى إدخال رمز سري قوي لا يقل عن 3 أرقام!");
+                return;
+            }
+            appState.adminPin = newPin;
+            document.getElementById('new_admin_pin').value = '';
+            showToast("تم تحديث رمز الإدارة السري بنجاح!");
+        }
+
+        // إدارة الأقسام والضمانات
+        function populateCategorySelects() {
+            const select = document.getElementById('item_category');
+            select.innerHTML = '';
+            appState.categories.forEach(cat => {
+                const opt = document.createElement('option');
+                opt.value = cat;
+                opt.innerText = cat;
+                select.appendChild(opt);
+            });
+            updateItemModelHint();
+        }
+
+        function openCategoryModal() {
+            openModal('modal-category');
+        }
+
+        function saveNewCategory() {
+            const catName = document.getElementById('new_category_name').value.trim();
+            if (!catName) {
+                showToast("يرجى كتابة اسم القسم أولاً!");
+                return;
+            }
+            if (!appState.categories.includes(catName)) {
+                appState.categories.push(catName);
+                populateCategorySelects();
+                renderAdminSettingsUI();
+                renderReports();
+                showToast(`تمت إضافة قسم (${catName}) بنجاح!`);
+            }
+            document.getElementById('new_category_name').value = '';
+            closeModal('modal-category');
+        }
+
+        function populateWarrantySelects() {
+            const select = document.getElementById('item_warranty');
+            select.innerHTML = '';
+            appState.warranties.forEach(war => {
+                const opt = document.createElement('option');
+                opt.value = war;
+                opt.innerText = war;
+                select.appendChild(opt);
+            });
+        }
+
+        function openWarrantyModal() {
+            openModal('modal-warranty');
+        }
+
+        function saveNewWarranty() {
+            const warText = document.getElementById('new_warranty_text').value.trim();
+            if (!warText) {
+                showToast("يرجى كتابة نص الضمان أولاً!");
+                return;
+            }
+            if (!appState.warranties.includes(warText)) {
+                appState.warranties.push(warText);
+                populateWarrantySelects();
+                renderAdminSettingsUI();
+                showToast("تمت إضافة نوع الضمان الجديد بنجاح!");
+            }
+            document.getElementById('new_warranty_text').value = '';
+            closeModal('modal-warranty');
+        }
+
+        // إدارة الكاشير
+        function populateCashierSelects() {
+            const select = document.getElementById('sale_cashier');
+            select.innerHTML = '';
+            appState.cashiers.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.name;
+                opt.innerText = `${c.name} (${c.role})`;
+                select.appendChild(opt);
+            });
+        }
+
+        function openAddCashierModal() {
+            openModal('modal-cashier');
+        }
+
+        function saveNewCashier() {
+            const name = document.getElementById('new_cashier_name').value.trim();
+            const phone = document.getElementById('new_cashier_phone').value.trim();
+            if (!name) {
+                showToast("يرجى إدخال اسم الكاشير!");
+                return;
+            }
+            appState.cashiers.push({
+                id: appState.cashiers.length + 1,
+                name: name,
+                phone: phone || "غير مسجل",
+                role: "كاشير ومبيعات"
+            });
+            populateCashierSelects();
+            renderAdminSettingsUI();
+            document.getElementById('new_cashier_name').value = '';
+            document.getElementById('new_cashier_phone').value = '';
+            closeModal('modal-cashier');
+            showToast(`تمت إضافة الكاشير (${name}) بنجاح!`);
+        }
+
+        function updateItemModelHint() {
+            const cat = document.getElementById('item_category').value;
+            const input = document.getElementById('item_model');
+            const hints = {
+                "ثلاجة": "مثال: ثلاجة هيتاشي 24 قدم انفيرتر أبيض",
+                "سبليت ومكيف": "مثال: سبليت توسوت 2 طن T3 تحكم واي فاي",
+                "مبردة هواء": "مثال: مبردة لؤلؤة الخليج 6000 قش/كرتون",
+                "تنور (غازي وكهربائي)": "مثال: تنور غاز ستيل تركي بابين حراري",
+                "كلوبات وإضاءة": "مثال: بكج ليدات سقفية بانل 24 واط تركي",
+                "ريموت كنترول وشواحن": "مثال: ريموت سبليت شامل ذكي لجميع الماركات",
+                "شاشة وتلفزيون": "مثال: شاشة سامسونج 55 بوصة 4K سمارت",
+                "غسالة ملابس": "مثال: غسالة إل جي 9 كيلو حوضين"
+            };
+            input.placeholder = hints[cat] || "اكتب اسم وموديل السلعة";
+        }
+
+        function toggleInstallmentSection() {
+            const type = document.getElementById('payment_type').value;
+            const box = document.getElementById('installment_box');
+            if (type === 'أقساط شهرية') {
+                box.style.display = 'grid';
+                recalcInstallment();
+            } else {
+                box.style.display = 'none';
+            }
+        }
+
+        function recalcInstallment() {
+            const sellPrice = parseFloat(document.getElementById('sell_price').value) || 0;
+            const down = parseFloat(document.getElementById('inst_down').value) || 0;
+            const months = parseInt(document.getElementById('inst_months').value) || 1;
+            const debt = Math.max(0, sellPrice - down);
+            const monthly = months > 0 ? (debt / months).toFixed(0) : 0;
+            return { debt, monthly: parseFloat(monthly), months, down };
+        }
+
+        function updateProfitPreview() {
+            const cost = parseFloat(document.getElementById('cost_price').value) || 0;
+            const sell = parseFloat(document.getElementById('sell_price').value) || 0;
+            const profit = sell - cost;
+            const textEl = document.getElementById('preview-profit-text');
+            textEl.innerText = profit.toLocaleString() + ' د.ع';
+            textEl.style.color = profit >= 0 ? 'var(--secondary)' : 'var(--danger)';
+        }
+
+        // تسجيل حركة بيع جديدة
+        function recordNewSale() {
+            const cust = document.getElementById('cust_name').value.trim();
+            const phone = document.getElementById('cust_phone').value.trim();
+            const cat = document.getElementById('item_category').value;
+            const model = document.getElementById('item_model').value.trim();
+            let serial = document.getElementById('item_serial').value.trim();
+            const cost = parseFloat(document.getElementById('cost_price').value) || 0;
+            const sell = parseFloat(document.getElementById('sell_price').value) || 0;
+            const warranty = document.getElementById('item_warranty').value;
+            const cashier = document.getElementById('sale_cashier').value;
+            const payType = document.getElementById('payment_type').value;
+
+            if (!cust || !model || sell <= 0) {
+                showToast("يرجى إكمال البيانات الإلزامية وتحديد السعر بشكل صحيح!");
+                return null;
+            }
+
+            if (!serial) {
+                serial = "SN-" + Math.floor(100000 + Math.random() * 900000);
+            }
+
+            const saleId = "MST-" + (1000 + appState.sales.length + 1);
+            const todayStr = new Date().toISOString().split('T')[0];
+
+            let instData = null;
+            if (payType === 'أقساط شهرية') {
+                const calc = recalcInstallment();
+                const startDate = document.getElementById('inst_start_date').value || todayStr;
+                const lastDateObj = new Date(startDate);
+                lastDateObj.setMonth(lastDateObj.getMonth() + (calc.months - 1));
+                const lastDateStr = lastDateObj.toISOString().split('T')[0];
+
+                instData = {
+                    downPayment: calc.down,
+                    totalDebt: calc.debt,
+                    remaining: calc.debt,
+                    months: calc.months,
+                    monthlyAmount: calc.monthly,
+                    firstDate: startDate,
+                    lastDate: lastDateStr,
+                    paidMonths: 0,
+                    paymentHistory: [
+                        { date: todayStr, amount: calc.down, note: "دفعة مقدمة عند استلام الجهاز" }
+                    ],
+                    guarantor: document.getElementById('inst_guarantor').value.trim() || "غير مسجل",
+                    status: "نشط"
+                };
+            }
+
+            const newSaleRecord = {
+                id: saleId,
+                date: todayStr,
+                customer: cust,
+                phone: phone || "غير مسجل",
+                category: cat,
+                model: model,
+                serial: serial,
+                costPrice: cost,
+                sellPrice: sell,
+                profit: sell - cost,
+                warranty: warranty,
+                cashier: cashier,
+                paymentType: payType,
+                installment: instData
+            };
+
+            appState.sales.unshift(newSaleRecord);
+            appState.selectedSaleIndex = 0;
+            appState.currentDossierCustomer = cust;
+
+            refreshCustomerDatalist();
+            renderAllViews();
+            loadSaleToViewers(newSaleRecord);
+            showToast("تم تسجيل عملية البيع بنجاح وتحديث كافة الجداول!");
+
+            document.getElementById('posSaleForm').reset();
+            updateProfitPreview();
+            toggleInstallmentSection();
+
+            return newSaleRecord;
+        }
+
+        function saveAndGoToInvoice() {
+            const sale = recordNewSale();
+            if (sale) {
+                switchSection('tab-invoice-view');
+            }
+        }
+
+        function saveAndGoToWarranty() {
+            const sale = recordNewSale();
+            if (sale) {
+                switchSection('tab-warranty-view');
+            }
+        }
+
+        function loadSaleToViewers(sale) {
+            document.getElementById('inv_view_id').innerText = "#" + sale.id;
+            document.getElementById('inv_view_date').innerText = sale.date;
+            document.getElementById('inv_view_cashier').innerText = sale.cashier;
+            document.getElementById('inv_view_cust').innerText = sale.customer;
+            document.getElementById('inv_view_phone').innerText = sale.phone;
+            document.getElementById('inv_view_item').innerText = sale.model;
+            document.getElementById('inv_view_cat').innerText = sale.category;
+            document.getElementById('inv_view_serial').innerText = sale.serial;
+            document.getElementById('inv_view_warranty').innerText = sale.warranty;
+            document.getElementById('inv_view_payment').innerText = sale.paymentType;
+            document.getElementById('inv_view_total').innerText = sale.sellPrice.toLocaleString() + " د.ع";
+
+            const instExtra = document.getElementById('inv_view_installment_extra');
+            if (sale.installment) {
+                instExtra.style.display = 'block';
+                document.getElementById('inv_view_down').innerText = sale.installment.downPayment.toLocaleString() + " د.ع";
+                document.getElementById('inv_view_monthly').innerText = `${sale.installment.monthlyAmount.toLocaleString()} د.ع × ${sale.installment.months} أشهر`;
+            } else {
+                instExtra.style.display = 'none';
+            }
+
+            document.getElementById('war_view_id').innerText = "#WR-" + sale.id;
+            document.getElementById('war_view_date').innerText = sale.date;
+            document.getElementById('war_view_cust').innerText = sale.customer;
+            document.getElementById('war_view_item').innerText = sale.model;
+            document.getElementById('war_view_serial').innerText = sale.serial;
+            document.getElementById('war_view_type').innerText = sale.warranty;
+
+            const expDate = new Date(sale.date);
+            expDate.setFullYear(expDate.getFullYear() + 1);
+            document.getElementById('war_view_expiry').innerText = expDate.toISOString().split('T')[0];
+        }
+
+        function setInvoiceSize(size) {
+            const box = document.getElementById('invoice-render-box');
+            document.getElementById('btn-inv-a4').classList.toggle('active', size === 'a4');
+            document.getElementById('btn-inv-a6').classList.toggle('active', size === 'a6');
+            if (size === 'a6') {
+                box.classList.remove('mode-a4');
+                box.classList.add('mode-a6');
+            } else {
+                box.classList.remove('mode-a6');
+                box.classList.add('mode-a4');
+            }
+        }
+
+        function setWarrantySize(size) {
+            const box = document.getElementById('warranty-render-box');
+            document.getElementById('btn-war-a4').classList.toggle('active', size === 'a4');
+            document.getElementById('btn-war-a6').classList.toggle('active', size === 'a6');
+            if (size === 'a6') {
+                box.classList.remove('mode-a4');
+                box.classList.add('mode-a6');
+            } else {
+                box.classList.remove('mode-a6');
+                box.classList.add('mode-a4');
+            }
+        }
+
+        function printTarget(tabId) {
+            const section = document.getElementById(tabId);
+            section.classList.add('print-target');
+            window.print();
+            section.classList.remove('print-target');
+        }
+
+        function renderAllViews() {
+            renderInstallmentsTable();
+            renderReports();
+            renderHistoryTable();
+            if (appState.sales.length > 0) {
+                loadSaleToViewers(appState.sales[appState.selectedSaleIndex]);
+            }
+        }
+
+        function renderInstallmentsTable() {
+            const tbody = document.getElementById('installment_table_rows');
+            tbody.innerHTML = '';
+
+            const installmentSales = appState.sales.filter(s => s.installment !== null);
+            let totalDebts = 0;
+            document.getElementById('badge-inst-count').innerText = installmentSales.length;
+
+            if (installmentSales.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="12" style="text-align: center; color: var(--text-muted); padding: 25px;">لا توجد سجلات أقساط حالياً</td></tr>`;
+                document.getElementById('total_debts_badge').innerText = "إجمالي الديون بالسوق: 0 د.ع";
+                return;
+            }
+
+            installmentSales.forEach(sale => {
+                const inst = sale.installment;
+                totalDebts += inst.remaining;
+                const isPaid = inst.paidMonths >= inst.months || inst.remaining <= 0;
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>
+                        <strong>${sale.customer}</strong><br>
+                        <small style="color: var(--text-muted);">${sale.phone}</small>
+                    </td>
+                    <td>${sale.model}<br><span class="badge badge-info">${sale.category}</span></td>
+                    <td><strong>${sale.sellPrice.toLocaleString()}</strong> د.ع</td>
+                    <td>${inst.downPayment.toLocaleString()} د.ع</td>
+                    <td><strong style="color: var(--primary);">${inst.monthlyAmount.toLocaleString()}</strong> د.ع</td>
+                    <td><strong style="color: var(--danger); font-size: 1rem;">${inst.remaining.toLocaleString()}</strong> د.ع</td>
+                    <td>${inst.firstDate}</td>
+                    <td>${inst.lastDate}</td>
+                    <td>${inst.paidMonths} من ${inst.months} أشهر</td>
+                    <td><span class="badge ${isPaid ? 'badge-success' : 'badge-warning'}">${isPaid ? 'مسدد بالكامل' : 'مستمر بالسداد'}</span></td>
+                    <td>
+                        <button class="btn btn-secondary" style="padding: 5px 10px; font-size: 0.8rem;" 
+                            onclick="openPaymentModal('${sale.id}')" ${isPaid ? 'disabled style="background: #94a3b8; cursor: not-allowed;"' : ''}>
+                            ${isPaid ? 'مكتمل' : 'تسديد قسط'}
+                        </button>
+                    </td>
+                    <td>
+                        <button class="btn btn-outline" style="padding: 4px 8px; font-size: 0.78rem;" onclick="openCustomerProfile('${sale.customer}')">
+                            ملف الزبون
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('total_debts_badge').innerText = `إجمالي الديون بالسوق: ${totalDebts.toLocaleString()} د.ع`;
+        }
+
+        function renderReports() {
+            const today = new Date().toISOString().split('T')[0];
+            const now = new Date();
+
+            let todaySales = 0, todayProfit = 0, todayCount = 0;
+            let weekSales = 0, weekProfit = 0;
+            let monthSales = 0, monthProfit = 0;
+            let totalDebts = 0;
+            let categoryMap = {};
+
+            appState.categories.forEach(c => categoryMap[c] = 0);
+
+            appState.sales.forEach(sale => {
+                const saleDate = new Date(sale.date);
+                const diffDays = Math.ceil(Math.abs(now - saleDate) / (1000 * 60 * 60 * 24));
+
+                if (sale.date === today) {
+                    todaySales += sale.sellPrice;
+                    todayProfit += sale.profit;
+                    todayCount++;
+                }
+
+                if (diffDays <= 7) {
+                    weekSales += sale.sellPrice;
+                    weekProfit += sale.profit;
+                }
+
+                if (saleDate.getMonth() === now.getMonth() && saleDate.getFullYear() === now.getFullYear()) {
+                    monthSales += sale.sellPrice;
+                    monthProfit += sale.profit;
+                }
+
+                if (sale.installment) {
+                    totalDebts += sale.installment.remaining;
+                }
+
+                if (categoryMap[sale.category] !== undefined) {
+                    categoryMap[sale.category]++;
+                } else {
+                    categoryMap[sale.category] = 1;
+                }
+            });
+
+            document.getElementById('rep_today_sales').innerText = todaySales.toLocaleString() + ' د.ع';
+            document.getElementById('rep_today_profit').innerText = todayProfit.toLocaleString() + ' د.ع';
+            document.getElementById('rep_today_count').innerText = `${todayCount} حركات مسجلة اليوم`;
+
+            document.getElementById('rep_week_sales').innerText = weekSales.toLocaleString() + ' د.ع';
+            document.getElementById('rep_week_profit').innerText = weekProfit.toLocaleString() + ' د.ع';
+
+            document.getElementById('rep_month_sales').innerText = monthSales.toLocaleString() + ' د.ع';
+            document.getElementById('rep_month_profit').innerText = monthProfit.toLocaleString() + ' د.ع';
+
+            document.getElementById('rep_total_debts').innerText = totalDebts.toLocaleString() + ' د.ع';
+
+            const catContainer = document.getElementById('category_summary_boxes');
+            catContainer.innerHTML = '';
+            for (const [catName, count] of Object.entries(categoryMap)) {
+                const box = document.createElement('div');
+                box.className = 'stat-card';
+                box.style.borderRightColor = 'var(--primary-light)';
+                box.innerHTML = `
+                    <span class="stat-label">${catName}</span>
+                    <span class="stat-number" style="font-size: 1.3rem;">${count} جهاز</span>
+                    <span class="stat-footnote">إجمالي المبيعات بالمعرض</span>
+                `;
+                catContainer.appendChild(box);
+            }
+        }
+
+        function renderHistoryTable(query = '') {
+            const tbody = document.getElementById('history_table_rows');
+            tbody.innerHTML = '';
+
+            const filtered = appState.sales.filter(s => {
+                if (!query) return true;
+                return s.customer.includes(query) || s.model.includes(query) || s.id.includes(query) || s.serial.includes(query);
+            });
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="10" style="text-align: center; color: var(--text-muted); padding: 25px;">لا توجد فواتير مطابقة لبحثك</td></tr>`;
+                return;
+            }
+
+            filtered.forEach(sale => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>#${sale.id}</strong></td>
+                    <td>${sale.date}</td>
+                    <td><strong>${sale.customer}</strong><br><small style="color:var(--text-muted);">${sale.phone}</small></td>
+                    <td>${sale.model}<br><span class="badge badge-info">${sale.category}</span></td>
+                    <td>${sale.costPrice.toLocaleString()} د.ع</td>
+                    <td><strong>${sale.sellPrice.toLocaleString()} د.ع</strong></td>
+                    <td style="color: var(--secondary); font-weight: 800;">+${sale.profit.toLocaleString()} د.ع</td>
+                    <td><span class="badge ${sale.paymentType === 'نقد (كاش)' ? 'badge-success' : 'badge-warning'}">${sale.paymentType}</span></td>
+                    <td><small>${sale.cashier}</small></td>
+                    <td>
+                        <div style="display: flex; gap: 4px;">
+                            <button class="btn btn-outline" style="padding: 4px 8px; font-size: 0.75rem;" onclick="viewHistoricInvoice('${sale.id}')">وصل</button>
+                            <button class="btn btn-outline" style="padding: 4px 8px; font-size: 0.75rem; color: var(--accent); border-color: var(--accent);" onclick="viewHistoricWarranty('${sale.id}')">ضمان</button>
+                            <button class="btn btn-outline" style="padding: 4px 8px; font-size: 0.75rem; color: var(--primary); border-color: var(--primary);" onclick="openCustomerProfile('${sale.customer}')">ملفه</button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function filterSalesHistory() {
+            const val = document.getElementById('history_search_input').value.trim();
+            renderHistoryTable(val);
+        }
+
+        function viewHistoricInvoice(saleId) {
+            const sale = appState.sales.find(s => s.id === saleId);
+            if (!sale) return;
+            loadSaleToViewers(sale);
+            switchSection('tab-invoice-view');
+        }
+
+        function viewHistoricWarranty(saleId) {
+            const sale = appState.sales.find(s => s.id === saleId);
+            if (!sale) return;
+            loadSaleToViewers(sale);
+            switchSection('tab-warranty-view');
+        }
+
+        function renderAdminSettingsUI() {
+            const cList = document.getElementById('cashiers_list_ui');
+            cList.innerHTML = '';
+            appState.cashiers.forEach(c => {
+                const li = document.createElement('li');
+                li.style.display = 'flex';
+                li.style.justifyContent = 'space-between';
+                li.style.alignItems = 'center';
+                li.style.background = '#f8fafc';
+                li.style.padding = '8px 12px';
+                li.style.borderRadius = '8px';
+                li.innerHTML = `
+                    <div>
+                        <strong>${c.name}</strong> - <small style="color: var(--text-muted);">${c.role}</small>
+                        <br><small style="color: var(--text-muted);">هاتف: ${c.phone}</small>
+                    </div>
+                `;
+                cList.appendChild(li);
+            });
+
+            const catList = document.getElementById('admin_categories_list');
+            catList.innerHTML = '';
+            appState.categories.forEach(cat => {
+                const badge = document.createElement('span');
+                badge.className = 'badge badge-info';
+                badge.style.fontSize = '0.85rem';
+                badge.style.padding = '6px 12px';
+                badge.innerText = cat;
+                catList.appendChild(badge);
+            });
+
+            const warList = document.getElementById('admin_warranties_list');
+            warList.innerHTML = '';
+            appState.warranties.forEach((war, i) => {
+                const li = document.createElement('li');
+                li.style.background = '#f8fafc';
+                li.style.padding = '8px 12px';
+                li.style.borderRadius = '6px';
+                li.innerHTML = `<strong>${i + 1}.</strong> ${war}`;
+                warList.appendChild(li);
+            });
+        }
+
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        function showToast(text) {
+            const toast = document.getElementById('toast-container');
+            document.getElementById('toast-message').innerText = text;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3200);
+        }
+    </script>
+</body>
+</html>

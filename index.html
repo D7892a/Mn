@@ -719,7 +719,7 @@
         /* ============================================================
            تذييل ثابت للجوال + زر عائم
            ============================================================ */
-        .mobile-dock { display: none; position: fixed; bottom: 0; inset-inline: 0; background: var(--card-bg); border-top: 1px solid var(--border-color); z-index: 1150; padding: 6px 4px calc(6px + env(safe-area-inset-bottom)); }
+        .mobile-dock { display: none; position: fixed; bottom: 0; inset-inline: 0; background: var(--card-bg); border-top: 1px solid var(--border-color); z-index: 1090; padding: 6px 4px calc(6px + env(safe-area-inset-bottom)); }
         .mobile-dock .dock-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 2px; }
         .dock-btn { border: none; background: transparent; color: var(--text-muted); display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: .62rem; font-weight: 800; padding: 6px 2px; border-radius: 10px; cursor: pointer; }
         .dock-btn.active { color: var(--primary); background: var(--primary-soft); }
@@ -733,11 +733,14 @@
         }
         @media (max-width: 1080px) {
             .sidebar-drawer {
-                position: fixed; inset-block: 0; inset-inline-start: 0; top: 0; height: 100vh;
+                position: fixed; inset-block: 0; inset-inline-start: 0; top: 0;
+                height: 100vh; height: 100dvh;
                 transform: translateX(105%);
                 transition: transform .28s cubic-bezier(.3,.9,.3,1);
                 padding-top: 18px;
                 box-shadow: 24px 0 60px -20px rgba(0,0,0,.6);
+                z-index: 1250; /* فوق الطبقة المعتمة (1150) والشريط العلوي (1200) حتى تظهر القائمة وتقبل اللمس */
+                -webkit-overflow-scrolling: touch;
             }
             html[dir="rtl"] .sidebar-drawer { transform: translateX(105%); }
             body.nav-open .sidebar-drawer { transform: translateX(0) !important; }
@@ -3499,7 +3502,20 @@
         window.addEventListener("hashchange", () => { const h = (location.hash || "").replace("#", ""); if (h && $(h) && h !== ui.tab) switchSection(h); });
         if (!had) setTimeout(() => toast("مرحبًا! تم تجهيز بيانات تجريبية لتجربة النظام — يمكنك تصفيرها من الإعدادات 🧪", "info", 6000), 900);
         if (navigator.serviceWorker && location.protocol.startsWith("http")) {
-            navigator.serviceWorker.register("sw.js").then(() => { /* يعمل أوفلاين بعد أول زيارة */ }).catch(() => {});
+            navigator.serviceWorker.register("sw.js").then((reg) => {
+                /* يعمل أوفلاين بعد أول زيارة + يبلغنا عند توفر نسخة أحدث */
+                reg.addEventListener("updatefound", () => {
+                    const nw = reg.installing;
+                    if (nw) nw.addEventListener("statechange", () => { if (nw.state === "installed" && navigator.serviceWorker.controller) nw.postMessage("skip-waiting"); });
+                });
+            }).catch(() => {});
+            let swReloaded = false;
+            navigator.serviceWorker.addEventListener("controllerchange", () => {
+                if (swReloaded) return;
+                swReloaded = true;
+                try { localStorage.setItem("mst_sw_updated", "1"); } catch (e) {}
+                location.reload();
+            });
         }
         window.addEventListener("beforeunload", saveNow);
     });

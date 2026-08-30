@@ -1,22 +1,24 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="شعار نظام المعرض">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="شعار بيتي POS">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#1e3a8a"/>
-      <stop offset="100%" stop-color="#0f172a"/>
+      <stop offset="0%" stop-color="#2563EB"/>
+      <stop offset="100%" stop-color="#172033"/>
     </linearGradient>
-    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#fbbf24"/>
-      <stop offset="100%" stop-color="#f97316"/>
+    <linearGradient id="acc" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#60A5FA"/>
+      <stop offset="100%" stop-color="#2563EB"/>
     </linearGradient>
   </defs>
-  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
-  <g fill="none" stroke="#93c5fd" stroke-width="16" stroke-linejoin="round" opacity=".55">
-    <path d="M96 208h320v176a32 32 0 0 1-32 32H128a32 32 0 0 1-32-32z"/>
-    <path d="M96 208l48-96h224l48 96"/>
+  <rect width="512" height="512" rx="118" fill="url(#bg)"/>
+  <path d="M256 92 96 214v206a28 28 0 0 0 28 28h264a28 28 0 0 0 28-28V214z" fill="none" stroke="#93B4F8" stroke-width="18" stroke-linejoin="round" opacity=".55"/>
+  <path d="M256 150 148 232v158a18 18 0 0 0 18 18h180a18 18 0 0 0 18-18V232z" fill="url(#acc)"/>
+  <rect x="212" y="286" width="88" height="122" rx="14" fill="#0B1B33"/>
+  <circle cx="284" cy="348" r="9" fill="#60A5FA"/>
+  <g fill="#EAF1FE">
+    <rect x="196" y="238" width="120" height="12" rx="6"/>
   </g>
-  <path d="M176 264h160v120a24 24 0 0 1-24 24H200a24 24 0 0 1-24-24z" fill="url(#gold)"/>
-  <path d="M176 264h160" stroke="#b45309" stroke-width="12" stroke-linecap="round"/>
-  <circle cx="256" cy="330" r="26" fill="#431407"/>
-  <path d="M256 316v20l13 9" stroke="url(#gold)" stroke-width="9" fill="none" stroke-linecap="round"/>
-  <text x="256" y="470" font-family="Cairo, 'Segoe UI', Tahoma, sans-serif" font-size="86" font-weight="900" fill="#e2e8f0" text-anchor="middle">المصطفى</text>
+  <g stroke="#EAF1FE" stroke-width="10" stroke-linecap="round" opacity=".9">
+    <path d="M180 108h152"/>
+  </g>
+  <text x="256" y="470" text-anchor="middle" font-family="Tajawal, Segoe UI, sans-serif" font-size="52" font-weight="800" fill="#EAF1FE">بيتي</text>
 </svg>

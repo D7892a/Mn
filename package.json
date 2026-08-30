@@ -1,0 +1,15 @@
+{
+  "name": "bayti-pos",
+  "version": "1.0.0",
+  "private": true,
+  "description": "بيتي POS — نظام إدارة محلات المواد والأجهزة المنزلية (ملف واحد يعمل بدون إنترنت)",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node build.mjs && node test/run.mjs",
+    "serve": "node test/serve.mjs"
+  },
+  "devDependencies": {
+    "jsdom": "^26.1.0"
+  }
+}

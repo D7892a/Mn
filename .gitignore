@@ -1,0 +1,4 @@
+node_modules/
+.tmp-test.xlsx
+.DS_Store
+*.log

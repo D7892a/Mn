@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>معرض المصطفى للأجهزة المنزلية — نظام الإدارة الذكي v3.0</title>
+    <title>معرض المصطفى للأجهزة المنزلية — نظام الإدارة الذكي v3.1</title>
     <meta name="description" content="نظام شامل لإدارة معارض الأجهزة المنزلية: نقاط بيع، مخزون، أقساط وديون، ضمان وصيانة، خزينة وورديات، تقارير ورسوم بيانية، طباعة فواتير A4/A6 مع باركود وتفقيط، تصدير Excel، عمل بدون إنترنت.">
     <meta name="theme-color" content="#1e3a8a">
     <meta name="mobile-web-app-capable" content="yes">
@@ -104,15 +104,48 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        html { font-size: calc(16px * var(--fs-scale)); }
+        /* ============================================================
+           ثبات الشاشة (Layout stability)
+           — لا إزاحة أفقية ولا قفزات عند فتح النوافذ أو تغيّر طول الصفحة،
+           ولا تكبير تلقائي للحقول على الآيباد/الجوال، ولا انزياح عند الـ hover.
+           ============================================================ */
+        html {
+            font-size: calc(16px * var(--fs-scale));
+            overflow-x: clip;                 /* يقطع أي فائض أفقي بدل أن تجعل الصفحة تتحرك يمينًا/يسارًا */
+            overflow-y: scroll;               /* مساحة شريط التمرير محجوزة دائمًا → لا قفزة عند تبديل الأقسام */
+            scrollbar-gutter: stable;
+            scroll-padding-top: calc(var(--nav-h) + 14px);
+            -webkit-text-size-adjust: 100%;   /* يمنع تضخيم الخط التلقائي في iOS/iPadOS */
+            text-size-adjust: 100%;
+            overscroll-behavior-y: none;      /* يمنع ارتداد الشاشة (rubber-band) على الآيباد */
+        }
+        /* عند فتح نافذة/لوحة بحث: يُقفل تمرير الخلفية دون أي إزاحة لأن الـgutter محجوز */
+        html.lock-scroll { overflow: hidden; }
 
         body {
             background: var(--bg-body);
             color: var(--text-main);
             min-height: 100vh;
-            overflow-x: hidden;
+            min-height: 100dvh;
+            overflow-x: clip;
             transition: background .25s ease, color .25s ease;
         }
+
+        /* لمسات الآيباد/الجوال: حقول بحجم 16px على الأقل حتى لا يُقرّب المتصفح الشاشة عند الكتابة */
+        @media (pointer: coarse) {
+            input[type="text"], input[type="number"], input[type="tel"], input[type="date"],
+            input[type="time"], input[type="search"], input[type="url"], input[type="password"],
+            select, textarea { font-size: 16px !important; }
+            input[type="date"] { min-height: 44px; }
+            .btn { touch-action: manipulation; }
+        }
+        /* حركات الظهور: شفافية فقط بلا إزاحة (الإزاحة هي ما يجعل الشاشة «تتحرك») */
+        @keyframes fadeInSoft { from { opacity: 0; } to { opacity: 1; } }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
+        }
+        /* أي حاوية قابلة للتمرير: لا تسحب الصفحة كلها معها */
+        .table-responsive, .sidebar-drawer, .modal-body, .cart-lines, .table-scroll-6, .pos-results, .palette-list { overscroll-behavior: contain; }
 
         ::selection { background: var(--primary-light); color: #fff; }
 
@@ -129,11 +162,13 @@
             background: var(--sidebar-bg);
             color: #fff;
             height: var(--nav-h);
+            min-height: var(--nav-h);
             padding: 0 16px;
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 10px;
+            flex-wrap: nowrap;
             position: sticky;
             top: 0;
             z-index: 1200;
@@ -141,7 +176,13 @@
         }
         html[data-theme="dark"] .top-navbar { border-bottom: 1px solid var(--border-color); }
 
-        .nav-right, .nav-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
+        .nav-right, .nav-left { display: flex; align-items: center; gap: 10px; min-width: 0; flex-wrap: nowrap; }
+        .nav-right { flex: 1 1 auto; }
+        .nav-left { flex: 0 0 auto; }
+        /* عرض ثابت للساعة حتى لا تتحرك أزرار الشريط العلوي كل دقيقة */
+        .clock-box b { min-width: 5.6ch; text-align: end; display: inline-block; }
+        .clock-box small { min-width: 15ch; text-align: end; display: inline-block; }
+        #display-cashier-name { min-width: 8ch; }
 
         .menu-toggle-btn {
             background: rgba(255,255,255,.14);
@@ -177,7 +218,7 @@
             cursor: pointer; font-size: .8rem; font-weight: 700;
             transition: .2s; white-space: nowrap;
         }
-        .nav-btn:hover { background: rgba(255,255,255,.26); transform: translateY(-1px); }
+        .nav-btn:hover { background: rgba(255,255,255,.26); }
         .nav-btn.icon-only { padding: 0; width: 40px; justify-content: center; }
         .nav-btn.ok { background: rgba(16,185,129,.24); border-color: rgba(16,185,129,.5); }
 
@@ -191,7 +232,7 @@
         /* ============================================================
            القائمة الجانبية
            ============================================================ */
-        .app-shell { display: flex; align-items: flex-start; min-height: calc(100vh - var(--nav-h)); }
+        .app-shell { display: flex; align-items: flex-start; min-height: calc(100vh - var(--nav-h)); min-height: calc(100dvh - var(--nav-h)); }
 
         .sidebar-drawer {
             width: var(--sidebar-w);
@@ -201,7 +242,9 @@
             position: sticky;
             top: var(--nav-h);
             height: calc(100vh - var(--nav-h));
+            height: calc(100dvh - var(--nav-h));
             overflow-y: auto;
+            scrollbar-width: thin;
             padding: 14px 12px 90px;
             z-index: 1100;
         }
@@ -234,7 +277,7 @@
         }
         .menu-item svg { flex-shrink: 0; opacity: .9; }
         .menu-item span:nth-child(2) { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .menu-item:hover { background: rgba(255,255,255,.12); color: #fff; transform: translateX(-3px); }
+        .menu-item:hover { background: rgba(255,255,255,.12); color: #fff; }
         .menu-item.active {
             background: linear-gradient(90deg, rgba(255,255,255,.22), rgba(255,255,255,.08));
             color: #fff;
@@ -255,9 +298,9 @@
            ============================================================ */
         .main-wrapper { flex: 1; min-width: 0; padding: 20px; max-width: 1680px; margin: 0 auto; width: 100%; }
 
-        .tab-view { display: none; animation: fadeUp .28s ease; }
+        .tab-view { display: none; animation: fadeInSoft .16s ease; }
         .tab-view.active { display: block; }
-        @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+        @keyframes fadeUp { from { opacity: 0; } to { opacity: 1; } }
 
         .page-head {
             display: flex; align-items: center; justify-content: space-between; gap: 12px;
@@ -305,9 +348,9 @@
             padding: 16px;
             box-shadow: var(--shadow-card);
             position: relative; overflow: hidden;
-            transition: .22s;
+            transition: box-shadow .22s ease, border-color .22s ease;
         }
-        .kpi:hover { transform: translateY(-3px); box-shadow: var(--shadow-hover); }
+        .kpi:hover { box-shadow: var(--shadow-hover); border-color: var(--primary-light); }
         .kpi::after {
             content: ''; position: absolute; inset-inline-start: 0; top: 0; bottom: 0; width: 5px;
             background: var(--primary-light);
@@ -338,8 +381,8 @@
             white-space: nowrap;
         }
         html[data-theme="dark"] .btn { background: #1e293b; color: var(--text-main); }
-        .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 14px -6px rgba(15,23,42,.4); }
-        .btn:active { transform: translateY(0) scale(.98); }
+        .btn:hover { box-shadow: 0 6px 14px -6px rgba(15,23,42,.4); filter: saturate(1.05); }
+        .btn:active { filter: brightness(.94); }
         .btn:disabled { opacity: .5; cursor: not-allowed; transform: none; box-shadow: none; }
         .btn-primary { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 140%); color: #fff; }
         html[data-theme="dark"] .btn-primary { background: linear-gradient(135deg, #1d4ed8, #2563eb); }
@@ -442,7 +485,6 @@
            ============================================================ */
         .table-responsive { width: 100%; overflow-x: auto; border-radius: var(--radius-md); border: 1px solid var(--border-soft); background: var(--card-bg); }
         table { width: 100%; border-collapse: collapse; text-align: right; font-size: .85rem; }
-        thead { position: sticky; top: 0; z-index: 2; }
         th {
             background: var(--bg-body);
             color: var(--text-muted);
@@ -469,8 +511,49 @@
         .row-actions { display: flex; gap: 5px; flex-wrap: wrap; }
         .empty-state { text-align: center; padding: 34px 16px; color: var(--text-muted); font-weight: 800; font-size: .88rem; }
         .empty-state .big { font-size: 2.4rem; display: block; margin-bottom: 8px; opacity: .5; }
-        .table-scroll-6 { max-height: 520px; overflow-y: auto; }
+        .table-scroll-6 { max-height: min(520px, 62vh); overflow-y: auto; }
+        /* رأس الجدول يثبت داخل حاوية التمرير فقط (لا يطفو فوق الصفحة) */
+        .table-scroll-6 > table > thead, .table-responsive > table > thead { position: sticky; top: 0; z-index: 2; }
+        .table-scroll-6 > table > thead th, .table-responsive > table > thead th { background: var(--bg-body); }
 
+
+        /* ============================================================
+           حاسبة الأقساط الموحّدة (نقطة البيع + البيع السريع + الإعدادات)
+           ============================================================ */
+        .inst-panel { background: var(--bg-body); border: 1.5px dashed var(--primary-light); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+        .inst-panel .calc-preview-bar { margin-top: 0; }
+        .inst-panel .ip-chips + .ip-chips { margin-top: -4px; }
+        .inst-panel .form-grid { gap: 10px; }
+        .inst-panel .form-group > label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .ip-chips { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .ip-chips > span { font-size: .7rem; font-weight: 900; color: var(--text-muted); }
+        .ip-chip { border: 1.5px solid var(--border-color); background: var(--input-bg); color: var(--text-main); border-radius: 9px; padding: 5px 10px; font-size: .74rem; font-weight: 900; cursor: pointer; transition: background .14s, border-color .14s, color .14s; min-height: 32px; }
+        .ip-chip:hover { border-color: var(--primary-light); background: var(--primary-soft); }
+        .ip-chip.on { background: var(--primary); border-color: var(--primary); color: #fff; }
+        .ip-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 8px; }
+        .ip-tile { background: var(--card-bg); border: 1px solid var(--border-soft); border-radius: 11px; padding: 9px 11px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+        .ip-tile span { font-size: .68rem; font-weight: 900; color: var(--text-muted); }
+        .ip-tile b { font-size: 1rem; font-weight: 900; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .ip-tile small { font-size: .66rem; font-weight: 700; color: var(--text-muted); }
+        .ip-tile.pct { border-color: color-mix(in srgb, var(--secondary) 45%, transparent); background: color-mix(in srgb, var(--secondary-soft) 55%, var(--card-bg)); }
+        .ip-tile.pct b { color: var(--secondary); }
+        .ip-tile.pct2 { border-color: color-mix(in srgb, var(--violet) 40%, transparent); background: color-mix(in srgb, var(--violet-soft) 55%, var(--card-bg)); }
+        .ip-tile.pct2 b { color: var(--violet); }
+        .ip-tile.debt b { color: var(--danger); }
+        .ip-note { font-size: .74rem; font-weight: 800; line-height: 1.75; background: var(--card-bg); border: 1px solid var(--border-soft); border-radius: 11px; padding: 9px 12px; }
+        .ip-note b { color: var(--primary); }
+        .ip-note.warn { border-color: color-mix(in srgb, var(--accent) 50%, transparent); background: var(--accent-soft); }
+        .ip-notes { display: flex; flex-direction: column; gap: 6px; }
+        .ip-notes:not(:empty) { margin-top: 8px; }
+        .ip-note + .ip-note { margin-top: 0; }
+        /* مساحة ثابتة للأسفل حتى لا تقفز الشاشة عندما تظهر ملاحظة أو تختفي أثناء الكتابة */
+        @media (min-width: 901px) { .inst-panel .ip-notes { min-height: 84px; } }
+        .ip-tools { display: flex; gap: 7px; flex-wrap: wrap; }
+        @media (max-width: 720px) {
+            .ip-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .ip-tile b { font-size: .92rem; }
+            .inst-panel { padding: 11px; gap: 10px; }
+        }
 
         /* ============================================================
            سلة نقاط البيع (POS)
@@ -490,7 +573,7 @@
         .pos-result-row small { color: var(--text-muted); font-size: .72rem; font-weight: 700; }
         .pos-thumb { width: 38px; height: 38px; border-radius: 10px; background: var(--bg-body); display: grid; place-items: center; font-size: 1.1rem; flex-shrink: 0; border: 1px solid var(--border-soft); }
 
-        .cart-lines { display: flex; flex-direction: column; gap: 8px; max-height: 44vh; overflow-y: auto; padding-inline-end: 4px; }
+        .cart-lines { display: flex; flex-direction: column; gap: 8px; max-height: min(44vh, 44dvh); overflow-y: auto; padding-inline-end: 4px; overscroll-behavior: contain; }
         .cart-line {
             display: grid; grid-template-columns: 1fr auto; gap: 8px;
             border: 1px solid var(--border-soft); border-radius: 12px; padding: 10px 12px;
@@ -526,6 +609,7 @@
            ============================================================ */
         .modal-backdrop {
             position: fixed; inset: 0;
+            overscroll-behavior: contain;
             background: rgba(2,6,23,.62);
             backdrop-filter: blur(4px);
             display: none; align-items: flex-start; justify-content: center;
@@ -539,7 +623,7 @@
             border-radius: var(--radius-lg);
             width: 100%; max-width: 620px;
             box-shadow: 0 24px 60px -12px rgba(2,6,23,.5);
-            animation: popIn .24s cubic-bezier(.2,.9,.3,1.2);
+            animation: fadeInSoft .16s ease;
             margin: auto;
         }
         @keyframes popIn { from { transform: scale(.94) translateY(12px); opacity: 0; } to { transform: none; opacity: 1; } }
@@ -554,7 +638,7 @@
         .modal-header h3 { font-size: 1rem; font-weight: 900; display: flex; align-items: center; gap: 8px; }
         .modal-x { background: transparent; border: none; font-size: 1.3rem; cursor: pointer; color: var(--text-muted); width: 34px; height: 34px; border-radius: 9px; }
         .modal-x:hover { background: var(--danger-soft); color: var(--danger); }
-        .modal-body { padding: 20px; display: flex; flex-direction: column; gap: 14px; max-height: 72vh; overflow-y: auto; }
+        .modal-body { padding: 20px; display: flex; flex-direction: column; gap: 14px; max-height: min(72vh, 72dvh); overflow-y: auto; overscroll-behavior: contain; }
         .modal-actions { display: flex; gap: 9px; justify-content: flex-end; flex-wrap: wrap; padding: 14px 20px; border-top: 1px solid var(--border-soft); background: var(--bg-body); border-radius: 0 0 var(--radius-lg) var(--radius-lg); }
         html[data-theme="dark"] .modal-actions { background: rgba(255,255,255,.02); }
 
@@ -572,9 +656,9 @@
             border-inline-start: 5px solid var(--primary-light);
         }
         html[data-theme="dark"] .toast { background: #1e293b; border: 1px solid var(--border-color); }
-        @keyframes toastIn { from { transform: translateX(-40px) scale(.9); opacity: 0; } to { transform: none; opacity: 1; } }
+        @keyframes toastIn { from { opacity: 0; transform: translateY(6px) scale(.985); } to { opacity: 1; transform: none; } }
         .toast.out { animation: toastOut .3s forwards; }
-        @keyframes toastOut { to { transform: translateY(16px) scale(.94); opacity: 0; } }
+        @keyframes toastOut { to { opacity: 0; } }
         .toast.ok { border-inline-start-color: var(--secondary-light); }
         .toast.err { border-inline-start-color: var(--danger); }
         .toast.warn { border-inline-start-color: var(--accent); }
@@ -584,12 +668,13 @@
            ============================================================ */
         .palette {
             position: fixed; inset: 0; z-index: 2500; display: none;
+            overscroll-behavior: contain;
             background: rgba(2,6,23,.6); backdrop-filter: blur(6px); padding: 9vh 14px 14px;
         }
         .palette.active { display: block; }
         .palette-box { max-width: 700px; margin: 0 auto; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 18px; overflow: hidden; box-shadow: 0 30px 70px -20px rgba(0,0,0,.6); }
         .palette-box input { border: none; border-radius: 0; padding: 18px 20px; font-size: 1rem; font-weight: 800; box-shadow: none !important; }
-        .palette-list { max-height: 56vh; overflow-y: auto; padding: 8px; border-top: 1px solid var(--border-soft); }
+        .palette-list { max-height: min(56vh, 56dvh); overflow-y: auto; padding: 8px; border-top: 1px solid var(--border-soft); overscroll-behavior: contain; }
         .palette-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; cursor: pointer; font-size: .85rem; font-weight: 700; }
         .palette-item.sel { background: var(--primary-soft); }
         .palette-item .pi-tag { margin-inline-start: auto; }
@@ -610,7 +695,7 @@
            لوحات الحالة، التنبيهات، الخط الزمني، كانبان
            ============================================================ */
         .alert-item { display: flex; gap: 11px; align-items: flex-start; padding: 11px 13px; border-radius: 12px; border: 1px solid var(--border-soft); margin-bottom: 9px; background: var(--bg-body); transition: .16s; cursor: pointer; }
-        .alert-item:hover { transform: translateX(-3px); border-color: var(--primary-light); }
+        .alert-item:hover { border-color: var(--primary-light); background: var(--card-bg); }
         .alert-item .ai-ico { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; flex-shrink: 0; font-size: 1rem; }
         .alert-item.red .ai-ico { background: var(--danger-soft); }
         .alert-item.amber .ai-ico { background: var(--accent-soft); }
@@ -644,7 +729,12 @@
         .stat-tile .st-label { font-size: .72rem; font-weight: 800; color: var(--text-muted); }
         .stat-tile .st-val { font-size: 1.05rem; font-weight: 900; font-variant-numeric: tabular-nums; }
 
-        .chart-wrap { width: 100%; overflow-x: auto; }
+        .chart-wrap { width: 100%; overflow-x: auto; overscroll-behavior-x: contain; }
+        /* ارتفاع أدنى ثابت للصناديق التي يُعاد رسمها → لا قفز في الصفحة عند التحديث */
+        #dash-kpis, #instStats { min-height: 84px; }
+        #dash-chart, #rep-chart-daily { min-height: 190px; }
+        #rep-chart-cats, #rep-chart-pay { min-height: 120px; }
+        #dash-alerts, #dash-dues, #dash-recent, #dash-best { min-height: 46px; }
         .chart-legend { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 10px; font-size: .74rem; font-weight: 800; }
         .chart-legend span { display: inline-flex; align-items: center; gap: 5px; }
         .chart-legend i { width: 11px; height: 11px; border-radius: 3px; display: inline-block; }
@@ -727,46 +817,90 @@
         /* ============================================================
            الاستجابة (Responsive)
            ============================================================ */
+        /* ============================================================
+           الاستجابة — قياسات ثابتة على كل الأجهزة (آيباد / لابتوب / موبايل)
+           القواعد: لا عنصر يخرج عن الشاشة، ولا عمود ينكسر عشوائيًا، ولا
+           عناصر «تقفز» عند تغيير اتجاه الجهاز أو فتح القائمة.
+           ============================================================ */
+        @media (min-width: 1241px) {
+            /* عمود الإجماليات في نقطة البيع يثبت بجانب القائمة ولا ينزل مع التمرير */
+            .pos-totals { position: sticky; top: calc(var(--nav-h) + 14px); max-height: calc(100dvh - var(--nav-h) - 28px); overflow-y: auto; overscroll-behavior: contain; }
+        }
         @media (max-width: 1240px) {
             .pos-layout { grid-template-columns: 1fr; }
             .split { grid-template-columns: 1fr; }
+            :root { --sidebar-w: 236px; }
+            .kpi { padding: 13px; }
+            .kpi-value { font-size: 1.3rem; }
+            .main-wrapper { padding: 16px; }
+            table { font-size: .82rem; }
+            .pos-totals { position: static !important; max-height: none !important; }
+        }
+        /* الآيباد عرضًا / شاشات اللابتوب الصغيرة */
+        @media (min-width: 820px) and (max-width: 1180px) {
+            .g4 { grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
+            .g6 { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
+            .form-grid { grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); }
         }
         @media (max-width: 1080px) {
             .sidebar-drawer {
                 position: fixed; inset-block: 0; inset-inline-start: 0; top: 0;
+                width: min(var(--sidebar-w), 88vw);
                 height: 100vh; height: 100dvh;
                 transform: translateX(105%);
-                transition: transform .28s cubic-bezier(.3,.9,.3,1);
-                padding-top: 18px;
+                visibility: hidden;
+                transition: transform .28s cubic-bezier(.3,.9,.3,1), visibility 0s linear .28s;
+                padding-top: 18px; padding-bottom: calc(18px + env(safe-area-inset-bottom));
                 box-shadow: 24px 0 60px -20px rgba(0,0,0,.6);
                 z-index: 1250; /* فوق الطبقة المعتمة (1150) والشريط العلوي (1200) حتى تظهر القائمة وتقبل اللمس */
                 -webkit-overflow-scrolling: touch;
+                overscroll-behavior: contain;
             }
             html[dir="rtl"] .sidebar-drawer { transform: translateX(105%); }
-            body.nav-open .sidebar-drawer { transform: translateX(0) !important; }
+            body.nav-open .sidebar-drawer { transform: translateX(0) !important; visibility: visible; transition: transform .28s cubic-bezier(.3,.9,.3,1), visibility 0s; }
             body.nav-open .sidebar-overlay { opacity: 1; pointer-events: auto; }
             .drawer-close-btn { display: block; }
             .main-wrapper { padding: 14px; }
+            .top-navbar { padding: 0 10px; }
         }
         @media (max-width: 720px) {
             .mobile-dock { display: block; }
-            body { padding-bottom: 68px; }
+            body { padding-bottom: calc(64px + env(safe-area-inset-bottom)); }
             .brand-info p { display: none; }
-            .brand-info h1 { font-size: .95rem; max-width: 45vw; }
+            .brand-info h1 { font-size: .95rem; max-width: 42vw; }
             .clock-box, .hide-sm { display: none !important; }
             .main-wrapper { padding: 11px; }
             .card { padding: 14px; border-radius: 14px; }
             .card-header { margin: -14px -14px 14px; padding: 12px 14px; }
             .kpi-value { font-size: 1.2rem; }
+            .page-head { flex-direction: column; align-items: stretch; }
             .page-head h2 { font-size: 1.05rem; }
-            .modal-body { padding: 14px; }
-            #toast-stack { inset-inline: 10px; bottom: 78px; max-width: none; }
+            .head-actions { justify-content: stretch; }
+            .head-actions .btn { flex: 1; }
+            .modal-backdrop { padding: 10px 8px calc(10px + env(safe-area-inset-bottom)); align-items: flex-end; }
+            .modal-box { max-width: 100%; max-height: calc(100dvh - 20px); display: flex; flex-direction: column; }
+            .modal-body { padding: 14px; max-height: calc(100dvh - 170px); }
+            #toast-stack { inset-inline: 10px; bottom: calc(74px + env(safe-area-inset-bottom)); max-width: none; }
+            .searchbar input { min-width: 0; flex: 1 1 140px; }
+            .grid.g2, .grid.g3 { gap: 10px; }
         }
-
+        /* آيباد بالطول (768–834) والجالكسي تاب: شبكة مخصصة بدل الانكسار العشوائي */
+        @media (min-width: 600px) and (max-width: 900px) and (orientation: portrait) {
+            .g4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .g6 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+            .g3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .profile-overview-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+        /* أجهزة عريضة جدًا: لا تتباعد الأعمدة بشكل يهزّ النظر */
+        @media (min-width: 1900px) {
+            .main-wrapper { max-width: 1840px; }
+        }
         /* ============================================================
            قواعد الطباعة
            ============================================================ */
         @media print {
+            html, body { overflow: visible !important; }
+            * { animation: none !important; transition: none !important; }
             body { background: #fff !important; }
             .top-navbar, .sidebar-drawer, .sidebar-overlay, .print-toolbar, .no-print,
             .modal-backdrop, #toast-stack, .mobile-dock, .palette, .lock-screen { display: none !important; }
@@ -829,7 +963,7 @@
             <div class="brand-logo" id="brandLogo" title="شعار المعرض">م</div>
             <div class="brand-info">
                 <h1 id="brandTitle">معرض المصطفى للأجهزة المنزلية</h1>
-                <p id="brandTagline">نظام الإدارة الذكي v3.0 — مبيعات • مخزون • أقساط • صيانة • خزينة</p>
+                <p id="brandTagline">نظام الإدارة الذكي v3.1 — مبيعات • مخزون • أقساط • صيانة • خزينة</p>
             </div>
         </div>
         <div class="nav-left">
@@ -1003,7 +1137,7 @@
                     </div>
                     <div class="grid g2">
                         <div class="card">
-                            <div class="card-header"><h3>📅 أقساط مستحقة اليوم/متأخرة</h3><button class="btn btn-sm btn-ghost" onclick="switchSection('tab-installments')">عرض الكل</button></div>
+                            <div class="card-header"><h3>📅 أقساط مستحقة — الأقوى دينًا أولًا ⭐</h3><button class="btn btn-sm btn-ghost" onclick="switchSection('tab-installments')">عرض الكل</button></div>
                             <div id="dash-dues"></div>
                         </div>
                         <div class="card">
@@ -1105,7 +1239,7 @@
                 </div>
 
                 <div>
-                    <div class="card" style="position:sticky; top:calc(var(--nav-h) + 14px);">
+                    <div class="card pos-totals">
                         <div class="card-header"><h3>💳 الإجمالي والدفع</h3></div>
                         <div class="totals-box">
                             <div class="total-line"><span>المجموع قبل الخصم</span><b class="num" id="posSubtotal">0</b></div>
@@ -1140,35 +1274,7 @@
                                 <input type="date" id="posDate" onchange="renderDashboard()">
                             </div>
                             <div class="form-group full-width" id="posInstBox" style="display:none;">
-                                <div class="form-grid" style="background:var(--bg-body);padding:12px;border:1.5px dashed var(--primary-light);border-radius:12px;">
-                                    <div class="form-group">
-                                        <label>المقدمة</label>
-                                        <input type="number" id="posInstDown" value="0" min="0" step="250" oninput="posRecalc()">
-                                    </div>
-                                    <div class="form-group">
-                                        <label>عدد الأشهر</label>
-                                        <input type="number" id="posInstMonths" value="6" min="1" max="60" oninput="posRecalc()">
-                                    </div>
-                                    <div class="form-group">
-                                        <label>أول قسط</label>
-                                        <input type="date" id="posInstStart">
-                                    </div>
-                                    <div class="form-group">
-                                        <label>اسم الكفيل</label>
-                                        <input type="text" id="posGuarantor" placeholder="الاسم + الهاتف">
-                                    </div>
-                                    <div class="form-group">
-                                        <label>ربح/زيادة التقسيط (المبلغ)</label>
-                                        <input type="number" id="posInstFeeAmt" value="0" min="0" step="250" oninput="posFeeAmtChanged()">
-                                    </div>
-                                    <div class="form-group">
-                                        <label>نسبة الزيادة ٪ (من الصافي)</label>
-                                        <input type="number" id="posInstFeePct" value="0" min="0" step="0.1" oninput="posFeePctChanged()">
-                                    </div>
-                                    <div class="form-group full-width">
-                                        <div class="muted">القسط الشهري: <b class="num" id="posMonthly">0</b> — إجمالي الدين: <b class="num" id="posDebt">0</b> — الزيادة: <b class="num" id="posFeeShow">0</b></div>
-                                    </div>
-                                </div>
+                                <div class="inst-panel" id="instPanel-pos"></div>
                             </div>
                         </div>
 
@@ -1262,32 +1368,7 @@
                             <input type="date" id="ss_date">
                         </div>
                         <div class="form-group full-width" id="installment_box" style="display:none;">
-                            <div class="form-grid" style="background:var(--bg-body);padding:14px;border:1.5px dashed var(--primary-light);border-radius:12px;">
-                                <div class="form-group">
-                                    <label>الدفعة المقدمة</label>
-                                    <input type="number" id="inst_down" value="0" min="0" step="250" oninput="ssCalc()">
-                                </div>
-                                <div class="form-group">
-                                    <label>عدد الأشهر</label>
-                                    <input type="number" id="inst_months" value="6" min="1" max="60" oninput="ssCalc()">
-                                </div>
-                                <div class="form-group">
-                                    <label>تاريخ أول قسط</label>
-                                    <input type="date" id="inst_start_date">
-                                </div>
-                                <div class="form-group">
-                                    <label>الكفيل</label>
-                                    <input type="text" id="inst_guarantor" placeholder="مثال: أحمد عبد الله 07801234567">
-                                </div>
-                                <div class="form-group">
-                                    <label>ربح/زيادة التقسيط (المبلغ)</label>
-                                    <input type="number" id="inst_feeAmt" value="0" min="0" step="250" oninput="ssFeeAmtChanged()">
-                                </div>
-                                <div class="form-group">
-                                    <label>نسبة الزيادة ٪ (من السعر)</label>
-                                    <input type="number" id="inst_feePct" value="0" min="0" step="0.1" oninput="ssFeePctChanged()">
-                                </div>
-                            </div>
+                            <div class="inst-panel" id="instPanel-ss"></div>
                         </div>
                     </div>
                     <div class="calc-preview-bar">
@@ -1406,7 +1487,7 @@
                     <p>كل الفواتير مع إمكانية التعديل، الإلغاء (مرتجع مع إرجاع للمخزون)، إعادة الطباعة، والتصدير.</p>
                 </div>
                 <div class="head-actions">
-                    <button class="btn btn-sm btn-excel" onclick="exportSalesExcel()">📊 تصدير Excel</button>
+                    <button class="btn btn-sm btn-excel" onclick="exportSalesExcel()">📊 تصدير Excel (.xlsx)</button>
                     <button class="btn btn-sm btn-ghost" onclick="exportCSV('sales', 'invoices')">🧾 CSV</button>
                     <button class="btn btn-sm btn-ghost" onclick="verifyTicket()">🔎 تحقق من فاتورة</button>
                 </div>
@@ -1476,7 +1557,7 @@
                     <button class="btn btn-sm btn-secondary" onclick="openItemEditor()">＋ صنف جديد</button>
                     <button class="btn btn-sm btn-accent" onclick="openStockAdjust()">🔄 تعديل رصيد</button>
                     <button class="btn btn-sm btn-outline" onclick="openImportModal()">📥 استيراد CSV</button>
-                    <button class="btn btn-sm btn-excel" onclick="exportInventoryExcel()">📊 Excel</button>
+                    <button class="btn btn-sm btn-excel" onclick="exportInventoryExcel()">📊 Excel (.xlsx)</button>
                     <button class="btn btn-sm btn-ghost" onclick="printSelectedLabels('inv')">🏷️ ملصقات</button>
                 </div>
             </div>
@@ -1590,7 +1671,7 @@
                 </div>
                 <div class="head-actions">
                     <button class="btn btn-sm btn-secondary" onclick="openPaymentModal(null)">💰 استلام قسط</button>
-                    <button class="btn btn-sm btn-excel" onclick="exportMasterInstallmentsExcel()">📊 كشف شامل Excel</button>
+                    <button class="btn btn-sm btn-excel" onclick="exportMasterInstallmentsExcel()">📊 كشف شامل Excel (.xlsx)</button>
                     <button class="btn btn-sm btn-ghost" onclick="printDueList()">🖨️ طباعة قائمة اليوم</button>
                 </div>
             </div>
@@ -1609,10 +1690,11 @@
                         <option value="done">مسددة بالكامل ✅</option>
                     </select>
                     <select id="instSort" onchange="renderInstallmentsTable()">
-                        <option value="strong">ترتيب: الأقوى ديناً أولاً ⭐</option>
+                        <option value="strong">ترتيب: الأقوى ديناً أولاً ⭐ (متأخر ← فائت ← أعلى متبقي)</option>
+                        <option value="debt">ترتيب: الأعلى متبقياً فقط</option>
                         <option value="due">ترتيب: الأقرب استحقاقاً</option>
-                        <option value="debt">ترتيب: الأعلى متبقياً</option>
-                        <option value="name">ترتيب: اسم الزبون</option>
+                        <option value="new">ترتيب: الأحدث عقدًا</option>
+                        <option value="name">ترتيب: اسم الزبون (أ-ي)</option>
                     </select>
                     <span class="badge badge-danger badge-lg" id="total_debts_badge">إجمالي الديون: 0</span>
                 </div>
@@ -1644,7 +1726,7 @@
                 </div>
                 <div class="head-actions">
                     <button class="btn btn-sm btn-secondary" onclick="openCustomerEditor()">＋ زبون جديد</button>
-                    <button class="btn btn-sm btn-excel" onclick="exportCustomersExcel()">📊 Excel الكل</button>
+                    <button class="btn btn-sm btn-excel" onclick="exportCustomersExcel()">📊 Excel (.xlsx) الكل</button>
                 </div>
             </div>
 
@@ -1656,8 +1738,15 @@
                             <select id="custFilter" onchange="renderCustomerList()">
                                 <option value="all">الكل</option>
                                 <option value="debt">عليهم ديون</option>
+                                <option value="overdue">ديون متأخرة ⚠️</option>
                                 <option value="vip">الأكثر شراءً</option>
                                 <option value="black">قائمة سوداء</option>
+                            </select>
+                            <select id="custSort" onchange="renderCustomerList()">
+                                <option value="debt">ترتيب: الأقوى دينًا ⭐</option>
+                                <option value="total">ترتيب: الأكثر شراءً</option>
+                                <option value="last">ترتيب: الأحدث تعاملًا</option>
+                                <option value="name">ترتيب: الاسم (أ-ي)</option>
                             </select>
                             <span class="badge badge-info" id="custCount">0 زبون</span>
                         </div>
@@ -1696,7 +1785,7 @@
                 <div class="head-actions">
                     <button class="btn btn-sm btn-secondary" onclick="openServiceEditor()">＋ بلاغ صيانة</button>
                     <button class="btn btn-sm btn-ghost" onclick="switchSection('tab-warranty-print')">🛡️ طباعة كفالة</button>
-                    <button class="btn btn-sm btn-excel" onclick="exportDataExcel('services','tickets')">📊 Excel</button>
+                    <button class="btn btn-sm btn-excel" onclick="exportDataExcel('services','tickets')">📊 Excel (.xlsx)</button>
                 </div>
             </div>
 
@@ -1747,7 +1836,7 @@
                             <option value="valid">سارية المفعول</option>
                         </select>
                         <input type="search" id="warQuery" placeholder="🔍 بحث بالسيريال أو الزبون..." oninput="renderWarrantyRegistry()">
-                        <button class="btn btn-sm btn-ghost" onclick="exportDataExcel('warranties','warranty-register')">📊 Excel</button>
+                        <button class="btn btn-sm btn-ghost" onclick="exportDataExcel('warranties','warranty-register')">📊 Excel (.xlsx)</button>
                     </div>
                 </div>
                 <div class="card tight">
@@ -1806,7 +1895,7 @@
                     <button class="btn btn-sm btn-secondary" onclick="openTreasuryModal('in')">＋ وارد</button>
                     <button class="btn btn-sm btn-danger" onclick="openTreasuryModal('out')">－ منصرف / مصروف</button>
                     <button class="btn btn-sm btn-primary" id="shiftBtn" onclick="handleShiftButton()">🔓 فتح الوردية</button>
-                    <button class="btn btn-sm btn-excel" onclick="exportDataExcel('treasury','cashbook')">📊 Excel</button>
+                    <button class="btn btn-sm btn-excel" onclick="exportDataExcel('treasury','cashbook')">📊 Excel (.xlsx)</button>
                 </div>
             </div>
 
@@ -1865,7 +1954,7 @@
                     <p>حلل الأداء: مبيعات، أرباح، هوامش، أفضل الموديلات، أداء الكاشيرية، ونسب التحصيل.</p>
                 </div>
                 <div class="head-actions">
-                    <button class="btn btn-sm btn-excel" onclick="exportReportExcel()">📊 تصدير التقرير Excel</button>
+                    <button class="btn btn-sm btn-excel" onclick="exportReportExcel()">📊 تصدير التقرير Excel (.xlsx)</button>
                     <button class="btn btn-sm btn-primary" onclick="printReport()">🖨️ طباعة / PDF</button>
                 </div>
             </div>
@@ -2055,7 +2144,33 @@
                                 <option value="1000">أقرب 1000 د.ع</option>
                             </select>
                         </div>
-                        <div class="form-group"><label>نسبة ربح التقسيط الافتراضية ٪ (تُعبّأ تلقائيًا عند البيع بالأقساط، ويمكن تعديلها لكل فاتورة)</label><input type="number" id="st_instFee" step="0.5" onchange="saveStoreSettings()"></div>
+                        <div class="form-group"><label>نسبة ربح التقسيط الافتراضية ٪ (تُعبّأ تلقائيًا عند البيع بالأقساط، ويمكن تعديلها لكل فاتورة)</label><input type="number" id="st_instFee" step="0.5" onchange="saveStoreSettings(); instPanelsSync()"></div>
+                        <div class="form-group"><label>على ماذا تُحسب النسبة؟</label>
+                            <select id="st_instFeeBasis" onchange="saveStoreSettings(); instPanelsSync()">
+                                <option value="price">على صافي الفاتورة (الشائع)</option>
+                                <option value="net">على السعر قبل الضريبة</option>
+                                <option value="debt">على المبلغ المموَّل (بعد المقدمة)</option>
+                            </select>
+                        </div>
+                        <div class="form-group"><label>تقريب مبالغ التقسيط (الزيادة والقسط)</label>
+                            <select id="st_instRound" onchange="saveStoreSettings(); instPanelsSync()">
+                                <option value="0">بدون تقريب</option>
+                                <option value="250">لأقرب 250 د.ع</option>
+                                <option value="500">لأقرب 500 د.ع</option>
+                                <option value="1000">لأقرب 1000 د.ع</option>
+                            </select>
+                        </div>
+                        <div class="form-group"><label>توزيع القسط الشهري</label>
+                            <select id="st_instMonthly" onchange="saveStoreSettings(); instPanelsSync()">
+                                <option value="even">متساوية قدر الإمكان (بمضاعفات التقريب)</option>
+                                <option value="round">قسط موحّد — والباقي على آخر قسط</option>
+                                <option value="up">لأعلى (أقساط متساوية، عددها يقل)</option>
+                                <option value="down">لأسفل</option>
+                                <option value="exact">بالضبط (بدون تقريب)</option>
+                            </select>
+                        </div>
+                        <div class="form-group"><label>تنبيه إذا تجاوزت النسبة ٪ (0 = بدون)</label><input type="number" id="st_instFeeMax" step="0.5" onchange="saveStoreSettings()"></div>
+                        <div class="form-group"><label class="check-row" style="margin-top:20px;"><input type="checkbox" id="st_instFeeAuto" onchange="saveStoreSettings()"> <span>تعبئة النسبة الافتراضية تلقائيًا عند اختيار «أقساط»</span></label></div>
                         <div class="form-group"><label>أقصى دين مسموح للزبون (للتنبيه)</label><input type="number" id="st_debtCeiling" step="50000" onchange="saveStoreSettings()"></div>
                         <div class="form-group"><label>حد التنبيه للمخزون</label><input type="number" id="st_lowAlert" step="1" onchange="saveStoreSettings()"></div>
                         <div class="form-group"><label>الأرقام</label>
@@ -2066,6 +2181,12 @@
                         </div>
                     </div>
                     <p class="muted" style="margin-top:12px;">💡 كل المبالغ تُخزّن بالدينار، والتبديل للعملة الأخرى للتعرض فقط — لا يغيّر السجلات.</p>
+                </div>
+
+                <div class="card">
+                    <div class="card-header"><h3>🧮 حاسبة نسبة التقسيط (جرّب قبل البيع)</h3><span class="sub">نفس أرقام نقطة البيع بالضبط</span></div>
+                    <p class="muted" style="margin-bottom:10px;">اكتب السعر (مثال 100,000) والمقدمة وعدد الأشهر، ثم أدخل <b>مبلغ الزيادة</b> فيحسب لك <b>النسبة</b> — أو العكس. النتائج نفسها تظهر للبائع في نقطة البيع وتُحفظ مع العقد وتُطبع في الكشف.</p>
+                    <div class="inst-panel" id="instPanel-calc"></div>
                 </div>
             </div>
 
@@ -2256,11 +2377,11 @@
        1) حالة النظام الافتراضية + البيانات التجريبية
        ============================================================ */
     const STORE_KEY = 'mst_pos_v3';
-    const APP_VER = '3.0';
+    const APP_VER = '3.1';
 
     const DEFAULT_SETTINGS = {
         storeName: "معرض المصطفى للأجهزة المنزلية",
-        tagline: "نظام الإدارة الذكي v3.0 — مبيعات • مخزون • أقساط • صيانة • خزينة",
+        tagline: "نظام الإدارة الذكي v3.1 — مبيعات • مخزون • أقساط • صيانة • خزينة",
         address: "بغداد - شارع المعارض، مجمع النور التجاري",
         phone: "07701234567",
         city: "بغداد / العراق",
@@ -2269,7 +2390,14 @@
         warrantyTerms: "1) تغطي الكفالة عيوب الصناعة فقط ولا تشمل الكسر أو سوء الاستخدام أو التيار الكهربائي غير المستقر.\n2) يجب إبراز شهادة الكفالة أو رقم الفاتورة عند المراجعة.\n3) الكفالة لا تشمل مواد التنظيف والفلاتر الاستهلاكية.\n4) الصيانة المنزلية تجرى خلال 48 ساعة من الاتصال.",
         footerNote: "شكراً لثقتكم — البضاعة المباعة لا تُرد ولا تُستبدل إلا بعيب مصنعي خلال 7 أيام مع الحفاظ على التغليف الأصلي.",
         invPrefix: "MST-", invStart: 1001, serialPrefix: "SN-",
-        currency: "IQD", usdRate: 1322, taxRate: 0, roundTo: 0, instFee: 0,
+        currency: "IQD", usdRate: 1322, taxRate: 0, roundTo: 0,
+        /* إعدادات الأقساط — أساس واحد للحساب في كل الشاشات */
+        instFee: 0,              // نسبة ربح التقسيط الافتراضية ٪
+        instFeeBasis: "price",   // price = على صافي الفاتورة • debt = على المبلغ المموّل بعد المقدمة
+        instRound: 250,          // تقريب المبلغ/القسط لمضاعفات (0 = بدون تقريب)
+        instMonthlyMode: "even",// even | round | up | down | exact (توزيع القسط الشهري)
+        instFeeMax: 0,           // تنبيه إذا تجاوزت النسبة هذه القيمة (0 = بدون)
+        instFeeAuto: true,       // تعبئة النسبة الافتراضية تلقائيًا عند اختيار التقسيط
         debtCeiling: 2000000, lowAlert: 2, digits: "latin",
         defaultSize: "a4", copies: 1,
         showTafqit: true, showBarcode: true, showSign: true, showStamp: true, autoPrint: false, sounds: true,
@@ -2580,11 +2708,16 @@
         const e = s.inst.schedule.find(x => !x.paid);
         return e ? e.due : null;
     }
+    function nextDueEntry(s) {
+        if (!s.inst || !s.inst.schedule) return null;
+        return s.inst.schedule.filter(x => !x.paid).sort((a, b) => String(a.due).localeCompare(String(b.due)))[0] || null;
+    }
     function dueInfo(s) {
-        const due = nextDueDate(s);
-        if (!due) return { due: null, overdue: false, days: 0, label: "مكتمل" };
+        const e = nextDueEntry(s);
+        const due = e ? e.due : null;
+        if (!due) return { due: null, overdue: false, days: 0, amount: 0, n: null, label: "مكتمل" };
         const d = daysBetween(todayStr(), due);
-        return { due, overdue: d > 0, days: Math.abs(d), label: d > 0 ? ("متأخر " + digitsMap(d) + " يوم") : (d === 0 ? "يستحق اليوم" : "بعد " + digitsMap(-d) + " يوم") };
+        return { due, overdue: d > 0, days: Math.abs(d), amount: num(e.amount), n: e.n, label: d > 0 ? ("متأخر " + digitsMap(d) + " يوم") : (d === 0 ? "يستحق اليوم" : "بعد " + digitsMap(-d) + " يوم") };
     }
 
     /* ============================================================
@@ -2613,9 +2746,22 @@
        7) نوافذ ديناميكية (نموذج عام + تأكيد)
        ============================================================ */
     let modalSubmit = null;
-    function openModal(id) { $(id).classList.add("active"); }
-    function closeModal(id) { $(id).classList.remove("active"); }
-    function closeTopModal() { $$(".modal-backdrop.active").forEach(m => m.classList.remove("active")); $("palette").classList.remove("active"); }
+    /* قفل تمرير الخلفية أثناء فتح نافذة/قائمة — مع الحفاظ على موضع الشاشة (بدون إزاحة) */
+    let scrollLockY = 0;
+    function syncScrollLock() {
+        const busy = document.querySelector(".modal-backdrop.active, .palette.active") || document.body.classList.contains("nav-open");
+        const root = document.documentElement;
+        if (busy && !root.classList.contains("lock-scroll")) {
+            scrollLockY = window.scrollY || root.scrollTop || 0;
+            root.classList.add("lock-scroll");          /* مساحة الـgutter محجوزة → لا إزاحة أفقية */
+        } else if (!busy && root.classList.contains("lock-scroll")) {
+            root.classList.remove("lock-scroll");
+            if (scrollLockY) window.scrollTo(0, scrollLockY);   /* نرجع لنفس موضع الشاشة بعد الإغلاق */
+        }
+    }
+    function openModal(id) { $(id).classList.add("active"); syncScrollLock(); }
+    function closeModal(id) { $(id).classList.remove("active"); syncScrollLock(); }
+    function closeTopModal() { $$(".modal-backdrop.active").forEach(m => m.classList.remove("active")); $("palette").classList.remove("active"); syncScrollLock(); }
 
     function fieldHtml(f, val) {
         const v = val === undefined || val === null ? "" : val;
@@ -2635,8 +2781,11 @@
             case "list":
                 input = `<input type="${f.t === 'num' ? 'number' : 'text'}" id="${id}" value="${esc(v)}" list="${f.list}" placeholder="${esc(f.ph || "")}" ${req} step="${f.step || 1}" ${f.min !== undefined ? 'min="' + f.min + '"' : ""} ${f.readonly ? "readonly" : ""} ${f.oninput ? `oninput="${f.oninput}"` : ""}>`;
                 break;
-            default:
-                input = `<input type="${f.t || 'text'}" id="${id}" value="${esc(v)}" placeholder="${esc(f.ph || "")}" ${req} step="${f.step || 1}" ${f.min !== undefined ? 'min="' + f.min + '"' : ""} ${f.max !== undefined ? 'max="' + f.max + '"' : ""} ${f.readonly ? "readonly" : ""} ${f.oninput ? `oninput="${f.oninput}"` : ""} inputmode="${f.t === 'num' || f.t === 'tel' ? (f.t === 'tel' ? 'numeric' : 'decimal') : 'text'}">`;
+            default: {
+                const typ = f.t === "num" ? "number" : (f.t || "text");
+                const im = typ === "number" ? "decimal" : (typ === "tel" ? "numeric" : "text");
+                input = `<input type="${typ}" id="${id}" value="${esc(v)}" placeholder="${esc(f.ph || "")}" ${req} step="${f.step || (typ === "number" ? 1 : "any")}" ${f.min !== undefined ? 'min="' + f.min + '"' : ""} ${f.max !== undefined ? 'max="' + f.max + '"' : ""} ${f.readonly ? "readonly" : ""} ${f.oninput ? `oninput="${f.oninput}"` : ""} inputmode="${im}" autocomplete="off">`;
+            }
         }
         return `<div class="form-group ${f.wide ? "full-width" : ""}">
             <label>${esc(f.l)}${f.required ? ' <span style="color:var(--danger)">*</span>' : ""}</label>
@@ -2797,26 +2946,144 @@
     }
 
     /* ============================================================
-       9) تصدير Excel / CSV
+       9) تصدير Excel حقيقي (.xlsx) / CSV — بدون أي مكتبة خارجية
        ============================================================ */
+    /* ---- ZIP (تخزين بلا ضغط) + CRC32: هذا ما يجعل الملف Excel حقيقيًا وليس HTML مموّهًا ---- */
+    const XZ_CRC = (function () { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+    function crc32(u8) { let c = 0xFFFFFFFF; for (let i = 0; i < u8.length; i++) c = XZ_CRC[(c ^ u8[i]) & 0xFF] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+    function dosStamp(d) {
+        return {
+            time: ((d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1)) & 0xFFFF,
+            date: (((Math.max(1980, d.getFullYear()) - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate()) & 0xFFFF
+        };
+    }
+    function zipStore(entries) {
+        const enc = new TextEncoder(), st = dosStamp(new Date());
+        const parts = [], central = [];
+        let offset = 0, cdSize = 0;
+        entries.forEach(e => {
+            const nb = enc.encode(e.name), data = e.data, crc = crc32(data);
+            const lh = new DataView(new ArrayBuffer(30));
+            lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true); lh.setUint16(6, 0x0800, true);
+            lh.setUint16(8, 0, true); lh.setUint16(10, st.time, true); lh.setUint16(12, st.date, true);
+            lh.setUint32(14, crc, true); lh.setUint32(18, data.length, true); lh.setUint32(22, data.length, true);
+            lh.setUint16(26, nb.length, true); lh.setUint16(28, 0, true);
+            parts.push(new Uint8Array(lh.buffer), nb, data);
+            const cd = new DataView(new ArrayBuffer(46));
+            cd.setUint32(0, 0x02014b50, true); cd.setUint16(4, 20, true); cd.setUint16(6, 20, true);
+            cd.setUint16(8, 0x0800, true); cd.setUint16(10, 0, true); cd.setUint16(12, st.time, true); cd.setUint16(14, st.date, true);
+            cd.setUint32(16, crc, true); cd.setUint32(20, data.length, true); cd.setUint32(24, data.length, true);
+            cd.setUint16(28, nb.length, true); cd.setUint16(30, 0, true); cd.setUint16(32, 0, true);
+            cd.setUint16(34, 0, true); cd.setUint16(36, 0, true); cd.setUint32(38, 0x20, true); cd.setUint32(42, offset, true);
+            central.push(new Uint8Array(cd.buffer), nb);
+            cdSize += 46 + nb.length;
+            offset += 30 + nb.length + data.length;
+        });
+        const eo = new DataView(new ArrayBuffer(22));
+        eo.setUint32(0, 0x06054b50, true);
+        eo.setUint16(8, entries.length, true); eo.setUint16(10, entries.length, true);
+        eo.setUint32(12, cdSize, true); eo.setUint32(16, offset, true); eo.setUint16(20, 0, true);
+        const all = parts.concat(central, [new Uint8Array(eo.buffer)]);
+        const out = new Uint8Array(all.reduce((t, c) => t + c.length, 0));
+        let p2 = 0; all.forEach(c => { out.set(c, p2); p2 += c.length; });
+        return out;
+    }
+    const xenc = (str) => new TextEncoder().encode(str);
+    function xesc(v) {
+        return String(v === null || v === undefined ? "" : v)
+            .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, "")
+            .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    }
+    function xcol(i) { let s2 = "", n = i + 1; while (n > 0) { const m = (n - 1) % 26; s2 = String.fromCharCode(65 + m) + s2; n = Math.floor((n - 1) / 26); } return s2; }
+    function xnum(v) { return typeof v === "number" && isFinite(v); }
+    function xsheetName(nm, used) {
+        let n = String(nm || "Sheet").replace(/[\\\/\?\*\[\]:]/g, " ").replace(/\s+/g, " ").trim().slice(0, 31) || "Sheet";
+        let i = 2, base = n;
+        while (used.indexOf(n) >= 0) n = (base.slice(0, 28) + "-" + i++);
+        used.push(n);
+        return n;
+    }
+    /** يبني ملف xlsx كامل: أوراق متعددة، رأس مثبّت، تصفية، أعمدة numbers حقيقية، واتجاه RTL */
+    function buildXlsx(sheets, meta) {
+        meta = meta || {};
+        const used = [];
+        const parts = [];
+        const nS = sheets.length;
+        parts.push({ name: "[Content_Types].xml", data: xenc(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>${sheets.map((sh, i) => `<Override PartName="/xl/worksheets/sheet${i + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join("")}<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/><Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/><Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/></Types>`) });
+        parts.push({ name: "_rels/.rels", data: xenc(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/><Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties" Target="docProps/app.xml"/></Relationships>`) });
+        const names = sheets.map(sh => xsheetName(sh.name || sh.title, used));
+        parts.push({ name: "xl/workbook.xml", data: xenc(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><workbookPr/><bookViews><workbookView activeTab="0"/></bookViews><sheets>${names.map((nm, i) => `<sheet name="${xesc(nm)}" sheetId="${i + 1}" r:id="rId${i + 1}"/>`).join("")}</sheets></workbook>`) });
+        parts.push({ name: "xl/_rels/workbook.xml.rels", data: xenc(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${names.map((nm, i) => `<Relationship Id="rId${i + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${i + 1}.xml"/>`).join("")}<Relationship Id="rId${nS + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`) });
+        parts.push({ name: "xl/styles.xml", data: xenc(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><numFmts count="2"><numFmt numFmtId="164" formatCode="#,##0"/><numFmt numFmtId="165" formatCode="0.00"/></numFmts><fonts count="3"><font><sz val="11"/><color theme="1"/><name val="Calibri"/></font><font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font><font><sz val="10"/><color rgb="FF64748B"/><name val="Calibri"/></font></fonts><fills count="4"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FF1E3A8A"/><bgColor indexed="64"/></patternFill></fill><fill><patternFill patternType="solid"><fgColor rgb="FFF1F5F9"/><bgColor indexed="64"/></patternFill></fill></fills><borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border><border><left style="thin"/><right style="thin"/><top style="thin"/><bottom style="thin"/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="7"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center" readingOrder="2"/></xf><xf numFmtId="164" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" applyAlignment="1"><alignment horizontal="right" readingOrder="2" wrapText="0"/></xf><xf numFmtId="0" fontId="0" fillId="3" borderId="0" xfId="0" applyFill="1" applyAlignment="1"><alignment horizontal="right" readingOrder="2"/></xf><xf numFmtId="164" fontId="0" fillId="3" borderId="0" xfId="0" applyNumberFormat="1" applyFill="1"/><xf numFmtId="165" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles><dxfs count="0"/></styleSheet>`) });
+        sheets.forEach((sh, idx) => {
+            const headers = sh.headers || [], rows = sh.rows || [];
+            const nCols = Math.max(headers.length, ...rows.map(r => r.length), 1);
+            const widths = new Array(nCols).fill(0);
+            headers.forEach((h, c) => { widths[c] = Math.max(widths[c] || 0, String(h === null || h === undefined ? "" : h).replace(/[^\u0600-\u06FF]/g, "x").length + 2); });
+            rows.forEach(r => { for (let c = 0; c < nCols; c++) { const v = r[c]; const L = xnum(v) ? String(Math.round(v)).length + 1 : String(v === null || v === undefined ? "" : v).replace(/[^\u0600-\u06FF]/g, "x").length; if (L > (widths[c] || 0)) widths[c] = L; } });
+            const cols = widths.map((w, c) => `<col min="${c + 1}" max="${c + 1}" width="${Math.min(46, Math.max(9, w * 1.05)).toFixed(1)}" customWidth="1"/>`).join("");
+            const cellXml = (v, r, c, alt) => {
+                const ref = xcol(c) + r;
+                if (xnum(v)) return `<c r="${ref}" s="${alt ? 5 : 2}"><v>${Math.round(num(v) * 100) / 100}</v></c>`;
+                const txt = v === null || v === undefined || v === "" ? "" : String(v);
+                if (txt === "") return alt ? `<c r="${ref}" s="4"/>` : "";
+                return `<c r="${ref}" s="${alt ? 4 : 3}" t="inlineStr"><is><t xml:space="preserve">${xesc(txt)}</t></is></c>`;
+            };
+            const head = `<row r="1" ht="26" customHeight="1">${headers.map((h, c) => `<c r="${xcol(c)}1" s="1" t="inlineStr"><is><t xml:space="preserve">${xesc(h)}</t></is></c>`).join("")}</row>`;
+            const body = rows.map((row, ri) => `<row r="${ri + 2}">${Array.from({ length: nCols }, (_, c) => cellXml(row[c], ri + 2, c, ri % 2 === 1)).join("")}</row>`).join("");
+            const lastRef = xcol(nCols - 1) + (rows.length + 1);
+            parts.push({
+                name: "xl/worksheets/sheet" + (idx + 1) + ".xml", data: xenc(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetPr><outlinePr summaryBelow="1" summaryRight="1"/><pageSetUpPr fitToPage="1"/></sheetPr><dimension ref="A1:${lastRef}"/><sheetViews><sheetView workbookViewId="0" rightToLeft="1" showGridLines="1" tabSelected="${idx === 0 ? 1 : 0}"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/><selection pane="bottomLeft" activeCell="A2" sqref="A2"/></sheetView></sheetViews><sheetFormatPr defaultRowHeight="16"/><cols>${cols}</cols><sheetData>${head}${body}</sheetData><autoFilter ref="A1:${lastRef}"/><pageMargins left="0.4" right="0.4" top="0.6" bottom="0.6" header="0.3" footer="0.3"/><pageSetup paperSize="9" orientation="landscape" fitToWidth="1"/></worksheet>`)
+            });
+        });
+        const iso = new Date().toISOString().replace(/\.\d+Z$/, "Z");
+        parts.push({ name: "docProps/core.xml", data: xenc(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><dc:title>${xesc(meta.title || "تصدير")}</dc:title><dc:subject>${xesc(meta.subject || "نظام إدارة المعرض")}</dc:subject><dc:creator>${xesc(meta.store || "معرض المصطفى")}</dc:creator><cp:lastModifiedBy>${xesc(meta.store || "معرض المصطفى")}</cp:lastModifiedBy><cp:revision>1</cp:revision><dcterms:created xsi:type="dcterms:W3CDTF">${iso}</dcterms:created><dcterms:modified xsi:type="dcterms:W3CDTF">${iso}</dcterms:modified></cp:coreProperties>`) });
+        parts.push({ name: "docProps/app.xml", data: xenc(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties" xmlns:vt="http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes"><Application>Microsoft Excel</Application><DocSecurity>0</DocSecurity><Company>${xesc(meta.store || "معرض المصطفى للأجهزة المنزلية")}</Company><Manager>${xesc(meta.by || "")}</Manager></Properties>`) });
+        return zipStore(parts);
+    }
+    function downloadBytes(bytes, fileName, mime) {
+        const blob = new Blob([bytes], { type: mime || "application/octet-stream" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob); a.download = fileName;
+        document.body.appendChild(a); a.click();
+        setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 800);
+    }
     function downloadFile(content, fileName, mime) {
-        const blob = new Blob(["\ufeff" + content], { type: (mime || "application/vnd.ms-excel;charset=utf-8") });
+        const blob = new Blob(["\ufeff" + content], { type: (mime || "text/plain;charset=utf-8") });
         const a = document.createElement("a");
         a.href = URL.createObjectURL(blob); a.download = fileName;
         document.body.appendChild(a); a.click();
         setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
         toast("تم تنزيل الملف: " + fileName, "ok");
     }
-    function excelWrap(title, tableHtml, extraCols) {
-        return `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta charset="utf-8">
-        <style>table{border-collapse:collapse;font-family:Arial;font-size:12px}th{background:#1e3a8a;color:#fff;border:1px solid #333;padding:6px}td{border:1px solid #999;padding:5px}caption{font-size:16px;font-weight:bold;padding:8px}tr:nth-child(even) td{background:#f5f7fb}</style>
-        </head><body dir="rtl"><table><caption>${esc(state.settings.storeName)} — ${esc(title)}</caption>${tableHtml}</table></body></html>`;
+    /** ملف Excel حقيقي (.xlsx) — الأرقام أرقامًا حقيقية تُجمع وتُفرز داخل إكسل */
+    function exportSheetExcel(title, headers, rows, fileName, opts) {
+        opts = opts || {};
+        const sheets = [{ name: opts.sheetName || title, headers: headers, rows: rows }];
+        if (opts.summary && opts.summary.length) sheets.push({ name: "ملخّص", headers: ["البند", "القيمة"], rows: opts.summary });
+        if (opts.notes && opts.notes.length) sheets.push({ name: "ملاحظات", headers: ["ملاحظة"], rows: opts.notes.map(x => [x]) });
+        try {
+            const bytes = buildXlsx(sheets, { title: title, store: state.settings.storeName, by: state.activeCashier });
+            const fn = (fileName || "export") + "-" + todayStr() + ".xlsx";
+            downloadBytes(bytes, fn, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            toast("تم تنزيل ملف Excel حقيقي: " + fn + " (" + digitsMap(rows.length) + " سطر)", "ok", 4200);
+            return true;
+        } catch (e) {
+            console.warn("xlsx failed", e);
+            csvDownload(fileName || "export", headers, rows);
+            toast("تعذّر توليد .xlsx — تم التصدير بصيغة CSV بدلًا منه", "warn", 5000);
+            return false;
+        }
     }
-    function exportTableExcel(title, headers, rows, fileName) {
-        const html = `<tr>${headers.map(h => `<th>${esc(h)}</th>`).join("")}</tr>` +
-            rows.map(r => `<tr>${r.map(c => `<td>${esc(c === null || c === undefined ? "" : c)}</td>`).join("")}</tr>`).join("");
-        downloadFile(excelWrap(title, html), (fileName || "export") + "-" + todayStr() + ".xls");
-    }
+    function exportTableExcel(title, headers, rows, fileName, opts) { return exportSheetExcel(title, headers, rows, fileName, opts); }
     function csvDownload(name, headers, rows) {
         const q = (v) => '"' + String(v === null || v === undefined ? "" : v).replace(/"/g, '""') + '"';
         const csv = [headers.map(q).join(",")].concat(rows.map(r => r.map(q).join(","))).join("\n");
@@ -2829,7 +3096,15 @@
     function exportDataExcel(kind, fileName) {
         const set = exportDataset(kind, fileName);
         if (!set) return;
-        exportTableExcel(set.title, set.headers, set.rows, fileName || set.title);
+        const numericCols = set.headers.map((h, i) => i).filter(i => set.rows.some(r => xnum(r[i])));
+        const totals = [];
+        numericCols.forEach(i => {
+            const vals = set.rows.map(r => r[i]).filter(xnum);
+            if (vals.length >= set.rows.length * 0.6 && /إجمالي|المتبقي|المبلغ|السعر|الكلفة|الصافي|الربح|الدين|قيمة|المقدمة|القسط|المسددة|الزيادة/.test(set.headers[i] || "")) {
+                totals.push([set.headers[i] + " (مجموع)", Math.round(sum(vals, v => num(v)))]);
+            }
+        });
+        exportTableExcel(set.title, set.headers, set.rows, fileName || set.title, { summary: totals.length ? totals : null });
     }
     function exportDataset(kind, name) {
         if (kind === "sales") return { title: "الفواتير", headers: ["رقم", "التاريخ", "الزبون", "الهاتف", "الأصناف", "الصافي", "الربح", "الدفع", "الدين المتبقي", "الكاشير", "الحالة"], rows: state.sales.map(s => [s.no, s.date, s.cust, s.phone, (s.items || []).map(i => i.name + "×" + i.qty).join(" | "), saleTotal(s), s.profit, payLabel(s.pay.method), saleDebt(s), s.cashier, isVoid(s) ? "ملغاة" : "مكتملة"]) };
@@ -2841,8 +3116,13 @@
         }
         if (kind === "inventory") return { title: "المخزون", headers: ["الصنف", "القسم", "SKU", "الرصيد", "الحد الأدنى", "الكلفة", "السعر", "قيمة الكلفة", "قيمة البيع", "المكان"], rows: state.inventory.map(i => [i.name, i.cat, i.sku, i.qty, i.min, i.cost, i.price, i.qty * i.cost, i.qty * i.price, i.loc]) };
         if (kind === "installments") {
-            const list = state.sales.filter(s => s.inst);
-            return { title: "الأقساط", headers: ["العقد", "الفاتورة", "التاريخ", "الزبون", "الهاتف", "الجهاز", "الإجمالي", "المقدمة", "الزيادة", "النسبة٪", "الدين", "المتبقي", "القسط", "الأشهر", "الكفيل", "الحالة"], rows: list.map(s => [s.inst.id || s.no, s.no, s.date, s.cust, s.phone, (s.items || []).map(i => i.name).join(" + "), saleTotal(s), s.inst.down, s.inst.fee || 0, s.inst.feePct || 0, s.inst.debt, s.inst.remaining, s.inst.monthly, s.inst.months, s.inst.guarantor, instStatusText(s)]) };
+            const list = state.sales.filter(s => s.inst).sort(byStrongestDebt);
+            const t = (s) => instTerms(s.inst);
+            return {
+                title: "الأقساط",
+                headers: ["الأولوية", "العقد", "الفاتورة", "التاريخ", "الزبون", "الهاتف", "الجهاز", "سعر الكاش", "المقدمة", "زيادة التقسيط", "النسبة٪ من السعر", "النسبة٪ من المموَّل", "ما يعادلها سنويًا٪", "الزيادة لكل شهر", "إجمالي الدين", "المتبقي", "القسط الشهري", "عدد الأشهر", "الكفيل", "الحالة"],
+                rows: list.map((s, idx) => { const q = t(s); return [idx + 1, s.inst.id || s.no, s.no, s.date, s.cust, s.phone, (s.items || []).map(i => i.name).join(" + "), q.price, q.down, q.fee, q.pctOnPrice, q.pctOnFinanced, q.yearly, q.perMonth, q.debt, num(s.inst.remaining), q.monthly, q.months, s.inst.guarantor || "", instStatusText(s)]; })
+            };
         }
         if (kind === "customers") {
             const list = customerStatsList();
@@ -2950,14 +3230,17 @@
         $$(".menu-item[data-tab]").forEach(m => m.classList.toggle("active", m.dataset.tab === id));
         $$(".dock-btn[data-dock]").forEach(m => m.classList.toggle("active", m.dataset.dock === id));
         if (window.innerWidth <= 1080) document.body.classList.remove("nav-open");
+        syncScrollLock();
         try { localStorage.setItem("mst_last_tab", id); } catch (e) {}
         try { if (location.protocol.startsWith("http")) history.replaceState(null, "", "#" + id); } catch (e) {}
         renderAllViews();
-        window.scrollTo({ top: 0, behavior: "smooth" });
+        /* انتقال فوري بلا تمرير ناعم: لا «حركة شاشة» عند تبديل الأقسام على الآيباد */
+        window.scrollTo(0, 0);
     }
     function toggleSidebar(force) {
         const on = force === undefined ? !document.body.classList.contains("nav-open") : force;
         document.body.classList.toggle("nav-open", on);
+        syncScrollLock();
     }
 
     function setTheme(t) {
@@ -3206,6 +3489,7 @@
             const tot = sum(items, i => i.qty * i.cost);
             S.purchases.push({ id: genCounter("purch", "PUR-"), date: p[0], supplier: p[1], items, total: Math.max(tot, p[3]), paid: p[3], note: "تحميل بضاعة", by: "مصطفى (المدير)" });
         });
+        S.settings.instFee = 20;      // نسبة ربح تقسيط تجريبية حتى تظهر النسب في العقود التجريبية
         const cashiers = S.cashiers.map(c => c.name);
         for (let i = 0; i < 26; i++) {
             const back = Math.floor(Math.random() * 46);
@@ -3380,6 +3664,9 @@
         setv("st_invStart", state.counters.invoice); setv("st_serialPrefix", S.serialPrefix);
         setv("st_cur", S.currency); setv("st_rate", S.usdRate); setv("st_tax", S.taxRate); setv("st_round", S.roundTo);
         setv("st_instFee", S.instFee); setv("st_debtCeiling", S.debtCeiling); setv("st_lowAlert", S.lowAlert); setv("st_digits", S.digits);
+        setv("st_instFeeBasis", S.instFeeBasis || "price"); setv("st_instRound", S.instRound === undefined ? 250 : S.instRound);
+        setv("st_instMonthly", S.instMonthlyMode || "even"); setv("st_instFeeMax", S.instFeeMax || 0);
+        { const el = $("st_instFeeAuto"); if (el) el.checked = S.instFeeAuto !== false; }
         setv("st_defaultSize", S.defaultSize); setv("st_copies", S.copies);
         [["st_showTafqit", "showTafqit"], ["st_showBarcode", "showBarcode"], ["st_showSign", "showSign"], ["st_showLogo", "showStamp"], ["st_autoPrint", "autoPrint"], ["st_sounds", "sounds"], ["st_requireAdmin", "requirePinToSwitch"], ["st_autoLock", "autoLock"]].forEach(([id, key]) => { const el = $(id); if (el) el.checked = !!S[key]; });
     }
@@ -3389,6 +3676,7 @@
         const g = (id, key, t) => { const el = $(id); if (!el) return; S[key] = t === "num" ? num(el.value) : (t === "bool" ? el.checked : el.value.trim()); };
         g("st_name", "storeName"); g("st_tagline", "tagline"); g("st_address", "address"); g("st_phone", "phone"); g("st_city", "city"); g("st_taxid", "taxId"); g("st_logo", "logoText"); g("st_warrantyTerms", "warrantyTerms"); g("st_footerNote", "footerNote"); g("st_invPrefix", "invPrefix");
         g("st_cur", "currency"); g("st_rate", "usdRate", "num"); g("st_tax", "taxRate", "num"); g("st_round", "roundTo", "num"); g("st_instFee", "instFee", "num"); g("st_debtCeiling", "debtCeiling", "num"); g("st_lowAlert", "lowAlert", "num"); g("st_digits", "digits");
+        g("st_instFeeBasis", "instFeeBasis"); g("st_instRound", "instRound", "num"); g("st_instMonthly", "instMonthlyMode"); g("st_instFeeMax", "instFeeMax", "num"); g("st_instFeeAuto", "instFeeAuto", "bool");
         g("st_defaultSize", "defaultSize"); g("st_copies", "copies", "num"); g("st_serialPrefix", "serialPrefix");
         g("st_showTafqit", "showTafqit", "bool"); g("st_showBarcode", "showBarcode", "bool"); g("st_showSign", "showSign", "bool"); g("st_showLogo", "showStamp", "bool"); g("st_autoPrint", "autoPrint", "bool"); g("st_sounds", "sounds", "bool"); g("st_requireAdmin", "requirePinToSwitch", "bool"); g("st_autoLock", "autoLock", "bool");
         const st = $("st_invStart"); if (st && num(st.value) > 0) { state.counters.invoice = Math.max(num(st.value), state.counters.invoice); }
@@ -3450,7 +3738,13 @@
     function renderHelp() {
         $("helpBox").innerHTML = `
             <p><b>كيف أبدأ؟</b> ابدأ من «المخزون» وأضف أصنافك، ثم سجّل أول فاتورة عبر <b>نقطة البيع (F2)</b>. كل شيء يُحفظ تلقائيًا داخل جهازك.</p>
-            <p><b>الأقساط:</b> عند الدفع اختر «أقساط شهرية»، حدد المقدمة وعدد الأشهر؛ ثم ضع <b>مبلغ الزيادة (الربح)</b> أو <b>نسبتها المئوية</b> — النظام يحسب الأخرى تلقائيًا ويُظهر القسط الشهري وإجمالي الدين قبل الحفظ (مثال: جهاز ١٠٠ ألف وزيادة ٢٥ ألف = نسبة ٢٥٪ وقسط ٣١,٢٥٠ على ٤ أشهر). يمكن تثبيت نسبة افتراضية من الإعدادات. تُرتَّب العقود تلقائيًا «الأقوى دينًا أولًا» (المتأخرة ثم الأعلى متبقيًا)، ويبني النظام جدول استحقاق مع تنبيه تأخير وزر واتساب.</p>
+            <p><b>الأقساط وكم نسبة تأخذ:</b> عند الدفع اختر «أقساط شهرية» فتظهر لوحة حساب واحدة: المقدمة، عدد الأشهر، ثم <b>مبلغ الزيادة</b> أو <b>نسبتها</b> — الحقلان مربوطان لحظيًا، وتختار أساس النسبة (صافي الفاتورة / السعر قبل الضريبة / المبلغ المموَّل بعد المقدمة). تعرض اللوحة ثلاث نِسَب معًا حتى لا يغمض لك أمر: <b>النسبة على السعر</b>، <b>النسبة على المموَّل</b>، و<b>ما يعادلها سنويًا</b>، مع الزيادة على كل قسط وإجمالي ما يدفعه الزبون. مثال: سعر 100,000 بزيادة 25,000 ← 25٪ من السعر (و33.3٪ من المموَّل إذا كانت المقدمة 25,000).</p>
+            <p><b>توزيع الأقساط:</b> يُوزَّع الدين بعدل على الأشهر بمضاعفات التقريب (250 د.ع افتراضيًا) بحيث <b>مجموع الأقساط = الدين بالضبط</b> — لا فرق في آخر الشهر ولا مبالغ كسرية لا تُدفع نقدًا، وتظهر خطة التوزيع (مثل: 8,500 × 8 ثم 8,250 × 4) قبل الحفظ وبعده في الجدول والكشف والإكسل. يمكنك اختيار «بالضبط» أو «لأعلى/لأسفل» أو تقريب 500/1000 من نفس اللوحة أو من الإعدادات.</p>
+            <p><b>القسط القادم والتحصيل:</b> المبلغ الظاهر في «أقساط اليوم والمتأخرة» وفي جدول الأقساط وفي رسالة الواتساب هو <b>قسط الزبون القادم فعليًا</b> (أول قسط غير مدفوع في جدول العقد) لا قسطة المتوسط — فإذا اختلفت الأقساط يظهر الرقم الصحيح لكل زبون، وينتقل تلقائيًا بعد كل دفعة. زر «استلام دفعة» يفتح على المبلغ المطلوب جاهزًا.</p>
+            <p><b>حاسبة التسعير 🧮:</b> في «نقطة البيع» و«بيع فاتورة واحدة» — أدخل الكلفة والهامش فتُحسب لك <b>نسبة الربح على السعر وعلى الكلفة</b> معًا، وإذا دخلت عدد الأشهر وربح التقسيط تحسب القسط <b>بنفس محرّك العقد</b>، وبزر واحد تُرسل النتيجة إلى نموذج البيع.</p>
+            <p><b>ترتيب «الأقوى دينًا أولًا» ⭐:</b> في جدول الأقساط ولوحة القيادة وقائمة الاستلام والكشف المطبوع وملف الإكسل — المقدار نفسه: الأكثر تأخيرًا ← ثم عدد الأقساط الفائتة ← ثم الأعلى متبقيًا ← ثم الأقرب استحقاقًا، مع وسم أولوية (⭐ #1) أمام اسم الزبون.</p>
+            <p><b>Excel حقيقي:</b> كل أزرار «Excel» تُنزل ملف <b>.xlsx</b> أصلي (OLE/ZIP) وليس جدول HTML مموّهًا — يفتح بلا رسالة تحذير، والأعمدة الرقمية أرقام حقيقية تُجمَّع وتُصفَّى وترسم منها المخططات، مع رأس مثبّت وتصفية تلقائية واتجاه من اليمين لليسار، وورقة «ملخّص» فيها المجاميع، وورقة «ملاحظات» للتحليل السريع.</p>
+            <p><b>ثبات الشاشة على كل الأجهزة:</b> لا إزاحة عند فتح النوافذ أو تبديل الأقسام (مساحة شريط التمرير محجوزة)، ولا «قفزة» عند اللمس على الآيباد (لا تأثيرات إزاحة مع hover، ولا تكبير تلقائي للحقول)، وأشرطة التمرير الداخلية لا تجرّ الصفحة معها، وعرض اللوحات مضبوط على الآيباد بالعرض/الطول واللابتوب والموبايل. ثبّته كتطبيق (Add to Home Screen) ليشتغل بملء الشاشة.</p>
             <p><b>الطباعة:</b> من «طباعة وصل الشراء» اختر A4 للورقة العادية أو A6 للطابعة الحرارية، وسيظهر الباركود والتفقيط إن كانت مفعّلة من الإعدادات.</p>
             <p><b>الورديات:</b> افتح الوردية صباحًا بمبلغ المفتتح، وسجّل المصروفات في «الخزينة»، وعند الإغلاق أدخل المبلغ المعدود ليحسب الفرق تلقائيًا.</p>
             <p><b>الأمان:</b> لا يوجد خادم ولا إنترنت مطلوب. خذ نسخة احتياطية (Ctrl+B) مرة أسبوعيًا وضعها على فلاشة أو واتساب.</p>
@@ -3497,6 +3791,7 @@
     window.addEventListener("DOMContentLoaded", () => {
         const had = load();
         applySettingsToUI();
+        instPanelsInit(true);          // لوحات التقسيط (نقطة البيع + البيع السريع + الحاسبة)
         initClock();
         bindShortcuts();
         updateNetStatus();
@@ -3504,7 +3799,7 @@
         window.addEventListener("offline", () => { updateNetStatus(); toast("انقطع الإنترنت — النظام يعمل بشكل طبيعي 📴", "warn"); });
         const today = todayStr();
         ["posDate", "ss_date"].forEach(id => setv(id, today));
-        setv("inst_start_date", addMonths(today, 1));
+        setv("ssInstStart", addMonths(today, 1));
         setv("posInstStart", addMonths(today, 1));
         ["repFrom", "repTo"].forEach(id => { if (!$(id).value) setv(id, today); });
         setReportPreset("month");
@@ -3550,45 +3845,363 @@
     const DLV_LABELS = { new: "جديدة", scheduled: "مجدولة", transit: "بالطريق", done: "منجزة", cancelled: "ملغاة" };
     const dlvStatusLabel = (s) => DLV_LABELS[s] || s;
 
+    /* ============================================================
+       18أ) محرّك حساب التقسيط — مصدر واحد للحساب في كل الشاشات
+            (نقطة البيع + البيع السريع + حاسبة الإعدادات + العقد المحفوظ)
+       ============================================================ */
+    function instR1(v) { return Math.round(num(v) * 10) / 10; }
+    function instPctTxt(v) {
+        const x = instR1(v);
+        const t = Math.abs(x * 10 - Math.round(x * 10)) < 0.0001 && Math.abs(x - Math.round(x)) > 0.0001 ? x.toFixed(1) : String(Math.round(x));
+        return digitsMap(t) + "٪";
+    }
+    function instRoundStep() { const v = num(state.settings.instRound); return v > 0 ? v : 0; }
+    function instBasis() { const b = state.settings.instFeeBasis; return (b === "debt" || b === "net") ? b : "price"; }
+
+    /**
+     * الخطة الكاملة للتقسيط من: السعر الصافي، المقدمة، الأشهر، والزيادة (مبلغ أو نسبة).
+     * o.feeMode = "fee" (المبلغ هو المُدخَل) أو "pct" (النسبة هي المُدخَل).
+     */
+    function instCompute(o) {
+        o = o || {};
+        const gross = Math.max(0, Math.round(num(o.price)));
+        const net = Math.max(0, Math.round(o.net === undefined ? gross : num(o.net)));
+        const step = o.step === undefined ? instRoundStep() : Math.max(0, num(o.step));
+        const monthsAsked = clamp(Math.round(num(o.months) || 1), 1, 240);
+        const downRaw = Math.max(0, Math.round(num(o.down)));
+        const down = gross > 0 ? Math.min(downRaw, gross) : downRaw;
+        const financed = Math.max(0, gross - down);
+        const basis = (o.basis === "debt" || o.basis === "net") ? o.basis : instBasis();
+        const base = basis === "debt" ? financed : (basis === "net" ? net : gross);
+        const monthlyMode = ["even", "up", "down", "exact", "round"].indexOf(o.monthlyMode) >= 0 ? o.monthlyMode : (state.settings.instMonthlyMode || "even");
+        let fee = 0, pct = Math.max(0, num(o.pct));
+        if (o.feeMode === "pct") {
+            fee = base * pct / 100;
+            if (step > 0) fee = Math.round(fee / step) * step;
+        } else {
+            fee = Math.max(0, num(o.fee));
+            if (fee <= 0 && pct > 0) { fee = base * pct / 100; if (step > 0) fee = Math.round(fee / step) * step; }
+            if (step > 0 && o.roundFee !== false) fee = Math.round(fee / step) * step;
+            pct = base > 0 ? instR1(fee / base * 100) : 0;
+        }
+        fee = Math.round(fee);
+        const debt = Math.round(financed + fee);
+        const sp = instSplit(debt, monthsAsked, step, monthlyMode);
+        const months = sp.months, monthly = sp.monthly, last = sp.last;
+        const paidTotal = Math.round(down + sp.amounts.reduce((t, x) => t + x, 0));
+        const cap = num(state.settings.instFeeMax);
+        return {
+            gross: gross, net: net, down: down, financed: financed, basis: basis, step: step, monthlyMode: monthlyMode,
+            months: months, monthsAsked: monthsAsked, monthly: monthly, last: last, fee: fee, debt: debt, paidTotal: paidTotal,
+            amounts: sp.amounts, groups: sp.groups, even: sp.monthly === sp.last,
+            cashDiff: Math.max(0, paidTotal - gross),
+            pct: base > 0 ? instR1(fee / base * 100) : 0,
+            pctOnPrice: gross > 0 ? instR1(fee / gross * 100) : 0,
+            pctOnFinanced: financed > 0 ? instR1(fee / financed * 100) : 0,
+            downPct: gross > 0 ? instR1(down / gross * 100) : 0,
+            perMonth: months > 0 ? Math.round(fee / months) : fee,
+            yearly: months > 0 && financed > 0 ? instR1(fee / financed * 100 * 12 / months) : 0,
+            overCap: cap > 0 && base > 0 && instR1(fee / base * 100) > cap
+        };
+    }
+
+    /**
+     * توزيع الدين على الأقساط بحيث يكون المجموع = الدين بالضبط.
+     * mode: even (متساوية قدر الإمكان — الافتراضي) | round | up | down | exact
+     */
+    function instSplit(debt, monthsAsked, step, mode) {
+        const months0 = Math.max(1, Math.round(num(monthsAsked) || 1));
+        debt = Math.max(0, Math.round(num(debt)));
+        let amounts = [];
+        const unit = step > 0 ? step : 1;
+        if (mode === "up" || mode === "down" || mode === "round") {
+            let m = months0 > 0 ? debt / months0 : debt;
+            m = mode === "up" ? Math.ceil(m / unit) * unit : mode === "down" ? Math.floor(m / unit) * unit : Math.round(m / unit) * unit;
+            m = Math.max(unit, Math.round(m));
+            let acc = 0;
+            while (acc < debt && amounts.length < months0) {
+                const amt = amounts.length === months0 - 1 || debt - acc <= m ? debt - acc : m;
+                amounts.push(amt); acc += amt;
+            }
+            if (!amounts.length) amounts = [debt];
+        } else if (mode === "exact") {
+            const base = Math.floor(debt / months0);
+            for (let i = 0; i < months0; i++) amounts.push(base);
+            amounts[months0 - 1] += debt - base * months0;
+        } else {
+            // even: أقرب ما يمكن للتساوي بمضاعفات الخطوة، والفرق يُوزَّع على أول الأقساط
+            let base = Math.floor(debt / months0 / unit) * unit;
+            let rem = debt - base * months0;
+            if (base <= 0 && unit > 1) {            // دين صغير جدًا على هذا العدد من الأشهر
+                base = 1; rem = debt - months0;
+                for (let i = 0; i < months0; i++) amounts.push(1);
+                amounts[months0 - 1] += rem;
+            } else {
+                const upCount = unit > 1 ? Math.floor(rem / unit) : rem;
+                const odd = unit > 1 ? rem - upCount * unit : 0;
+                for (let i = 0; i < months0; i++) amounts.push(base + (i < upCount ? unit : 0));
+                amounts[months0 - 1] += odd;
+            }
+        }
+        amounts = amounts.filter((x, i) => x > 0 || i === 0).map(x => Math.round(x));
+        let acc2 = 0; amounts.forEach(x => acc2 += x);
+        if (acc2 !== debt && amounts.length) amounts[amounts.length - 1] += debt - acc2;   // ضمان التطابق التام
+        const groups = [];
+        amounts.forEach(x => { const g = groups[groups.length - 1]; if (g && g.amt === x) g.count++; else groups.push({ amt: x, count: 1 }); });
+        return { months: amounts.length, monthly: amounts[0] || 0, last: amounts[amounts.length - 1] || 0, amounts: amounts, groups: groups };
+    }
+
+    /* ---- لوحة الإدخال المشتركة ---- */
+    const INST_UI = {
+        pos: { base: () => { const b = posBill(); return { price: b.total, net: b.sub - b.disc }; }, down: "posInstDown", months: "posInstMonths", start: "posInstStart", guar: "posGuarantor", label: "صافي الفاتورة الحالية" },
+        ss: { base: () => { const pr = num($("ss_price").value); return { price: pr, net: pr }; }, down: "ssInstDown", months: "ssInstMonths", start: "ssInstStart", guar: "ssInstGuar", label: "سعر الجهاز" },
+        calc: { base: () => { const pr = num($("calc_ipPrice").value); return { price: pr, net: pr }; }, down: "calc_ipDown", months: "calc_ipMonths", start: "", guar: "", label: "السعر (جرّبه بنفسك)", bare: true }
+    };
+    const INST_IP_IDS = (kind, k) => kind + "_ip" + k;
+
+    function instPanelHtml(kind) {
+        const c = INST_UI[kind], I = (k) => INST_IP_IDS(kind, k);
+        const step = instRoundStep() || 250;
+        const bar = kind === "pos"
+            ? `<div class="calc-preview-bar" style="margin:0">
+                <div><span class="lbl">القسط الشهري: </span><b class="val num" id="posMonthly">0</b></div>
+                <div><span class="lbl">إجمالي الدين: </span><b class="val num" id="posDebt">0</b></div>
+                <div><span class="lbl">زيادة التقسيط: </span><b class="val num" id="posFeeShow">0</b></div>
+                <div style="flex:1 1 100%"><span class="muted" id="posInstHint">—</span></div>
+               </div>`
+            : (kind === "ss" ? `<div><span class="muted" id="ssInstHint">—</span></div>` : "");
+        const priceField = c.bare ? `<div class="form-group"><label>${esc(c.label)}</label><input type="number" id="${I("Price")}" value="100000" min="0" step="${step}" oninput="instEdit('${kind}')"></div>` : "";
+        const dateFields = c.start ? `<div class="form-group"><label>أول قسط</label><input type="date" id="${c.start}" onchange="instEdit('${kind}')"></div>
+                <div class="form-group"><label>اسم الكفيل</label><input type="text" id="${c.guar}" placeholder="الاسم + الهاتف" onchange="instEdit('${kind}')"></div>` : "";
+        return `${bar ? `<div class="ip-bar">${bar}</div>` : ""}
+        <div class="form-grid">
+            ${priceField}
+            <div class="form-group"><label>${c.bare ? "المقدمة" : "المقدمة (دفعة أولى)"}</label><input type="number" id="${c.down}" value="0" min="0" step="${step}" oninput="instEdit('${kind}','down')"></div>
+            <div class="form-group"><label>عدد الأشهر</label><input type="number" id="${c.months}" value="6" min="1" max="60" step="1" oninput="instEdit('${kind}','months')"></div>
+            <div class="form-group"><label>ربح/زيادة التقسيط (مبلغ)</label><input type="number" id="${I("Fee")}" value="0" min="0" step="${step}" oninput="instEdit('${kind}','fee')"></div>
+            <div class="form-group"><label>نسبة الزيادة ٪ <span class="muted">(الحقلان مربوطان)</span></label><input type="number" id="${I("Pct")}" value="0" min="0" step="0.1" oninput="instEdit('${kind}','pct')"></div>
+            ${dateFields}
+            <div class="form-group"><label>أساس النسبة</label><select id="${I("Basis")}" onchange="instEdit('${kind}','basis')">
+                <option value="price">على صافي الفاتورة</option>
+                <option value="net">على السعر قبل الضريبة</option>
+                <option value="debt">على المبلغ المموَّل (بعد المقدمة)</option>
+            </select></div>
+            <div class="form-group"><label>تقريب الزيادة والقسط</label><select id="${I("Step")}" onchange="instEdit('${kind}','step')">
+                <option value="0">بدون تقريب (بالضبط)</option>
+                <option value="250">لأقرب 250 د.ع</option>
+                <option value="500">لأقرب 500 د.ع</option>
+                <option value="1000">لأقرب 1000 د.ع</option>
+            </select></div>
+            <div class="form-group"><label>توزيع القسط الشهري</label><select id="${I("MMode")}" onchange="instEdit('${kind}','mmode')">
+                <option value="even">متساوية قدر الإمكان (بمضاعفات التقريب)</option>
+                <option value="round">قسط موحّد — والباقي على آخر قسط</option>
+                <option value="up">لأعلى (يتساوى الجميع تقريبًا)</option>
+                <option value="down">لأسفل</option>
+                <option value="exact">بالضبط (بدون تقريب)</option>
+            </select></div>
+        </div>
+        <div class="ip-chips"><span>نسب جاهزة:</span>${[10, 15, 20, 25, 30, 35, 40].map(x => `<button type="button" class="ip-chip" data-pct="${x}" onclick="instSetPct('${kind}',${x})">${digitsMap(x)}٪</button>`).join("")}</div>
+        <div class="ip-chips"><span>الأشهر:</span>${[3, 6, 9, 12, 18, 24, 36].map(x => `<button type="button" class="ip-chip" data-months="${x}" onclick="instSetMonths('${kind}',${x})">${digitsMap(x)}</button>`).join("")}</div>
+        <div class="ip-chips"><span>المقدمة:</span>${[0, 10, 20, 30, 50].map(x => `<button type="button" class="ip-chip" data-down="${x}" onclick="instSetDownPct('${kind}',${x})">${x ? digitsMap(x) + "٪" : "بدون"}</button>`).join("")}</div>
+        <div id="${I("Out")}"></div>
+        <div class="ip-tools">
+            <button type="button" class="btn btn-xs btn-ghost" onclick="instSolveMonths('${kind}')">🎯 عندي قسط شهري مطلوب ← احسب الأشهر</button>
+            <button type="button" class="btn btn-xs btn-ghost" onclick="instSolveFee('${kind}')">💰 حدّد القسط ← احسب الزيادة اللازمة</button>
+            <button type="button" class="btn btn-xs btn-ghost" onclick="instResetFee('${kind}')">↩️ النسبة الافتراضية (${digitsMap(num(state.settings.instFee))}٪)</button>
+        </div>`;
+    }
+
+    function instSplitText(pl) {
+        if (!pl) return "";
+        if (pl.groups && pl.groups.length > 1) return pl.groups.map(g => digitsMap(g.count) + " × " + money(g.amt)).join(" ثم ");
+        return money(pl.monthly) + " × " + digitsMap(pl.months);
+    }
+    function instPlanHtml(pl) {
+        if (!pl) return "";
+        const tile = (lbl, val, cls, foot) => `<div class="ip-tile ${cls || ""}"><span>${lbl}</span><b class="num">${val}</b>${foot ? `<small>${foot}</small>` : ""}</div>`;
+        const notes = [];
+        if (pl.gross <= 0) notes.push({ c: "warn", t: "أدخل سعرًا صحيحًا أولًا حتى تُحسب النسبة والقسط." });
+        if (pl.overCap) notes.push({ c: "warn", t: "⚠️ النسبة " + instPctTxt(pl.pct) + " أعلى من السقف المحدد في الإعدادات (" + instPctTxt(num(state.settings.instFeeMax)) + ") — راجع السياسة قبل البيع." });
+        if (pl.months !== pl.monthsAsked) notes.push({ c: "warn", t: "ℹ️ خُفّض عدد الأقساط من " + digitsMap(pl.monthsAsked) + " إلى " + digitsMap(pl.months) + " لأن القسط مقرَّب لأعلى — اختر «بالضبط» أو «لأقرب» لتوزيع متساوٍ." });
+        if (pl.step > 0 && pl.amounts.some(a => a % pl.step !== 0)) notes.push({ c: "warn", t: "📎 آخر قسط ليس من مضاعفات التقريب " + digitsMap(pl.step) + " (" + money(pl.last) + ") — لأن الدين نفسه ليس من مضاعفاتها؛ المجموع يبقى مطابقًا للدين بالضبط." });
+        if (pl.down > 0 && pl.financed <= 0) notes.push({ c: "warn", t: "المقدمة تغطي كامل المبلغ — لا حاجة لتقسيط؛ استخدم الدفع النقدي." });
+        const sentence = pl.gross > 0
+            ? `📌 <b>${money(pl.gross)}</b> سعر، مقدمة <b>${money(pl.down)}</b> (${instPctTxt(pl.downPct)})، وزيادة <b>${money(pl.fee)}</b> = <b>${instPctTxt(pl.pctOnPrice)}</b> من السعر و<b>${instPctTxt(pl.pctOnFinanced)}</b> من المبلغ المموَّل <b>${money(pl.financed)}</b>. الأقساط: <b>${instSplitText(pl)}</b> — أي أنك تأخذ فعليًا ما يعادل <b>${instPctTxt(pl.yearly)}</b> سنويًا (${money(pl.perMonth)} زيادة في كل قسط)، ويدفع الزبون إجمالًا <b>${money(pl.paidTotal)}</b>.`
+            : "";
+        return `<div class="ip-grid">
+                ${tile("نسبة الزيادة على السعر", instPctTxt(pl.pctOnPrice), "pct", money(pl.fee) + " ÷ " + money(pl.gross))}
+                ${tile("نسبة الزيادة على المموَّل", instPctTxt(pl.pctOnFinanced), "pct2", "بعد طرح المقدمة")}
+                ${tile("ما يعادله سنويًا", instPctTxt(pl.yearly), "", "على المبلغ المموَّل")}
+                ${tile("القسط الشهري", money(pl.monthly), "", pl.groups && pl.groups.length > 1 ? "موزّع: " + pl.groups.map(g => digitsMap(g.count) + "×" + fmt(g.amt)).join(" + ") : "× " + digitsMap(pl.months) + (pl.last !== pl.monthly ? " (آخرها " + money(pl.last) + ")" : ""))}
+                ${tile("إجمالي الدين بالأقساط", money(pl.debt), "debt", "منه الربح " + money(pl.fee))}
+                ${tile("إجمالي ما يدفعه الزبون", money(pl.paidTotal), "", "مقدمة + أقساط")}
+                ${tile("أكثر من السعر الكاش", money(pl.cashDiff), "", instPctTxt(pl.pctOnPrice) + " من السعر")}
+             </div>
+             <div class="ip-notes">${sentence ? `<div class="ip-note">${sentence}</div>` : ""}${notes.map(n => `<div class="ip-note${n.c ? " " + n.c : ""}">${n.t}</div>`).join("")}</div>`;
+    }
+
+    function instRender(kind) {
+        const c = INST_UI[kind]; if (!c) return null;
+        const downEl = $(c.down); if (!downEl) return null;
+        const b = c.base();
+        const I = (k) => INST_IP_IDS(kind, k);
+        const mode = (ui.instMode && ui.instMode[kind]) || "fee";
+        const pl = instCompute({
+            price: b.price, net: b.net, down: num(downEl.value), months: num($(c.months).value),
+            fee: num($(I("Fee")).value), pct: num($(I("Pct")).value), feeMode: mode,
+            basis: $(I("Basis")) ? $(I("Basis")).value : undefined,
+            step: $(I("Step")) ? num($(I("Step")).value) : undefined,
+            monthlyMode: $(I("MMode")) ? $(I("MMode")).value : undefined
+        });
+        if (mode === "pct") { const el = $(I("Fee")); if (el && document.activeElement !== el) el.value = pl.fee || 0; }
+        else { const el = $(I("Pct")); if (el && document.activeElement !== el) el.value = pl.pct || 0; }
+        const out = $(I("Out")); if (out) out.innerHTML = instPlanHtml(pl);
+        const bs = $(I("Basis")); if (bs && bs.value !== pl.basis) bs.value = pl.basis;
+        const host = out && out.parentNode ? out.parentNode : document;
+        $$("[data-pct]", host).forEach(ch => ch.classList.toggle("on", pl.fee > 0 && instR1(num(ch.dataset.pct)) === instR1(pl.pct)));
+        $$("[data-months]", host).forEach(ch => ch.classList.toggle("on", num(ch.dataset.months) === pl.monthsAsked));
+        $$("[data-down]", host).forEach(ch => ch.classList.toggle("on", pl.down > 0 && num(ch.dataset.down) === pl.downPct));
+        return pl;
+    }
+    function instEdit(kind, src) {
+        ui.instMode = ui.instMode || {};
+        if (src === "fee") ui.instMode[kind] = "fee";
+        else if (src === "pct") ui.instMode[kind] = "pct";
+        if (kind === "pos") posRecalc();
+        else if (kind === "ss") ssCalc();
+        else instRender("calc");
+    }
+    function instSetPct(kind, v) { const el = $(INST_IP_IDS(kind, "Pct")); if (el) el.value = v; ui.instMode = ui.instMode || {}; ui.instMode[kind] = "pct"; instEdit(kind); }
+    function instSetMonths(kind, v) { const el = $(INST_UI[kind].months); if (el) el.value = v; instEdit(kind, "months"); }
+    function instSetDownPct(kind, v) {
+        const price = INST_UI[kind].base().price;
+        const el = $(INST_UI[kind].down); if (el) el.value = Math.round(price * v / 100);
+        instEdit(kind, "down");
+    }
+    function instSolveMonths(kind) {
+        const c = INST_UI[kind], I = (k) => INST_IP_IDS(kind, k);
+        const pl = instRender(kind) || instCompute({ price: c.base().price });
+        promptBox("🎯 حساب عدد الأشهر من القسط المطلوب", "القسط الشهري الذي تريده", pl.monthly || 250000, (v) => {
+            const want = num(v); if (want <= 0) return toast("أدخل مبلغًا صحيحًا", "err");
+            const fin = pl.financed, fee = pl.fee;
+            const m = clamp(Math.ceil((fin + fee) / want), 1, 60);
+            const el = $(c.months); if (el) el.value = m;
+            instEdit(kind, "months");
+            toast("عدد الأشهر الآن " + digitsMap(m) + " بقسط ≈ " + money(Math.round((fin + fee) / m)), "ok");
+        }, "number");
+    }
+    function instSolveFee(kind) {
+        const c = INST_UI[kind], I = (k) => INST_IP_IDS(kind, k);
+        const pl = instRender(kind) || instCompute({ price: c.base().price });
+        promptBox("💰 حساب الزيادة اللازمة لتحقيق قسط معيّن", "القسط الشهري المطلوب", pl.monthly || 250000, (v) => {
+            const want = num(v), m = Math.max(1, num($(c.months).value) || pl.months);
+            const fee = Math.max(0, Math.round(want * m - pl.financed));
+            const fe = $(I("Fee")); if (fe) fe.value = fee;
+            ui.instMode = ui.instMode || {}; ui.instMode[kind] = "fee";
+            instEdit(kind, "fee");
+            toast("زيادة لازمة: " + money(fee) + " (" + instPctTxt(pl.gross > 0 ? fee / pl.gross * 100 : 0) + " من السعر)", "ok", 4200);
+        }, "number");
+    }
+    function instResetFee(kind) {
+        const rate = num(state.settings.instFee);
+        const el = $(INST_IP_IDS(kind, "Pct")); if (el) el.value = rate || 0;
+        ui.instMode = ui.instMode || {}; ui.instMode[kind] = rate > 0 ? "pct" : "fee";
+        instEdit(kind, "pct");
+    }
+    /* يركّب لوحات التقسيط الثلاث من قالب واحد */
+    function instPanelsInit(force) {
+        Object.keys(INST_UI).forEach(kind => {
+            const mount = $("instPanel-" + kind);
+            if (!mount) return;
+            if (force || !$(INST_IP_IDS(kind, "Fee"))) mount.innerHTML = instPanelHtml(kind);
+        });
+        if (force) {
+            ["pos", "ss"].forEach(kind => {
+                const c = INST_UI[kind];
+                if (!c || !c.start) return;
+                setv(c.start, addMonths(todayStr(), 1));
+                const nameId = kind === "pos" ? "posCustName" : "ss_name";
+                const nm = $(nameId) ? $(nameId).value.trim() : "";
+                const cu = state.customers[nm];
+                if (cu) setv(c.guar, cu.guarantorName || "");
+            });
+        }
+        instPanelsSync();
+    }
+    /* بعد تغيير إعدادات التقسيط: نحدّث اللوحات القائمة دون مسح ما كتبه البائع */
+    function instPanelsSync() {
+        Object.keys(INST_UI).forEach(kind => {
+            if (!$(INST_IP_IDS(kind, "Fee"))) return;
+            const bs = $(INST_IP_IDS(kind, "Basis")); if (bs) bs.value = instBasis();
+            const st = $(INST_IP_IDS(kind, "Step")); if (st) st.value = String(instRoundStep());
+            const mm = $(INST_IP_IDS(kind, "MMode")); if (mm) mm.value = state.settings.instMonthlyMode || "even";
+            instRender(kind);
+        });
+    }
+    function instPlanOf(kind) { return instRender(kind); }
+
     function buildSchedule(inst) {
         const out = [];
         let acc = 0;
-        const months = Math.max(1, num(inst.months) || 1);
+        const pre = Array.isArray(inst.amounts) && inst.amounts.length ? inst.amounts : null;
+        const months = pre ? pre.length : Math.max(1, num(inst.months) || 1);
         for (let i = 0; i < months; i++) {
             const isLast = i === months - 1;
-            const amount = isLast ? Math.round(num(inst.debt) - acc) : num(inst.monthly);
+            const amount = isLast ? Math.round(num(inst.debt) - acc) : (pre ? Math.round(num(pre[i])) : num(inst.monthly));
             if (isLast && amount <= 0) break;      // آخر قسط امتصّه التقريبات → نحذف القسط الصفري
             acc += amount;
-            out.push({ n: i + 1, due: addMonths(inst.start, i), amount, paid: false, paidAmt: 0, paidDate: "", note: isLast && amount !== num(inst.monthly) ? "يشمل باقي التقريب" : "" });
+            const std = pre ? num(pre[0]) : num(inst.monthly);
+            const tol = Math.max(num(inst.roundStep) || 0, 1);
+            out.push({ n: i + 1, due: addMonths(inst.start, i), amount, paid: false, paidAmt: 0, paidDate: "", note: Math.abs(amount - std) > tol ? ("يختلف عن القسط الأساسي (" + (amount > std ? "+" : "") + fmt(amount - std) + ")") : "" });
         }
         inst.months = out.length;
         return out;
     }
-    function makeInstallment(total, down, months, startDate, guarantor, saleDate, feeAmt) {
-        const baseDebt = Math.max(0, total - down);
-        let fee = 0;
-        if (feeAmt !== undefined && feeAmt !== null) {
-            fee = Math.max(0, num(feeAmt));
-        } else {
-            // النسبة الافتراضية من الإعدادات تُحسب على إجمالي الفاتورة وتطبّق على كل العقود
-            const rate = num(state.settings.instFee);
-            if (rate > 0) fee = Math.round(total * rate / 100 / 250) * 250;
+    function makeInstallment(total, down, months, startDate, guarantor, saleDate, feeAmt, plan) {
+        const price = Math.max(0, Math.round(num(total)));
+        let p = plan;
+        if (!p || p.debt === undefined) {
+            const hasAmt = feeAmt !== undefined && feeAmt !== null && num(feeAmt) > 0;
+            p = instCompute({
+                price: price, net: price, down: num(down), months: num(months),
+                fee: hasAmt ? num(feeAmt) : 0,
+                pct: hasAmt ? 0 : num(state.settings.instFee),
+                feeMode: hasAmt ? "fee" : "pct"
+            });
         }
-        fee = Math.round(num(fee) / 250) * 250; // تقريب لمضاعفات الـ250 دينار
-        const debt = baseDebt + fee;
-        const monthly = months > 0 ? Math.round(debt / months / 250) * 250 : debt;
         const inst = {
-            id: genCounter("warranty", "WR-"), down: Math.max(0, down), fee, feePct: total > 0 ? Math.round(fee / total * 1000) / 10 : 0,
-            debt, remaining: debt, months: months || 1, monthly,
-            start: startDate || addMonths(saleDate || todayStr(), 1), guarantor: guarantor || "غير مسجل", status: "active", paid: 0, paidCount: 0, payments: []
+            id: genCounter("warranty", "WR-"),
+            down: p.down, fee: p.fee,
+            feePct: p.pctOnPrice,            // النسبة على صافي الفاتورة
+            feePctF: p.pctOnFinanced,        // النسبة على المبلغ المموَّل بعد المقدمة
+            feeBasis: p.basis, feeYear: p.yearly, perMonth: p.perMonth,
+            roundStep: p.step, monthlyMode: p.monthlyMode,
+            debt: p.debt, remaining: p.debt, months: p.months, monthly: p.monthly, lastAmt: p.last,
+            amounts: (p.amounts || []).slice(),
+            start: startDate || addMonths(saleDate || todayStr(), 1), guarantor: guarantor || "غير مسجل",
+            status: "active", paid: 0, paidCount: 0, payments: []
         };
         if (inst.down > 0) inst.payments.push({ date: saleDate || todayStr(), amount: inst.down, note: "دفعة مقدمة عند الاستلام" });
         inst.schedule = buildSchedule(inst);
         return inst;
     }
+    /* تنبيهات ما قبل حفظ العقد: سقْف النسبة، سقف الدين، القائمة السوداء */
+    function instContractWarnings(inst, s) {
+        if (!inst) return "";
+        const out = [];
+        const cap = num(state.settings.instFeeMax);
+        if (cap > 0 && num(inst.feePct) > cap) out.push("⚠️ نسبة الزيادة " + instPctTxt(inst.feePct) + " أعلى من السقف في الإعدادات (" + instPctTxt(cap) + ")");
+        const ceiling = num(state.settings.debtCeiling);
+        if (ceiling > 0 && num(inst.remaining) > ceiling) out.push("⚠️ دين العقد " + money(inst.remaining) + " تجاوز سقف الدين " + money(ceiling));
+        const cust = state.customers && s ? state.customers[s.cust] : null;
+        if (cust && cust.black) out.push("⛔ الزبون مسجّل في القائمة السوداء");
+        if (inst.monthlyMode === "exact" || inst.roundStep === 0) { /* لا شيء */ }
+        return out.join(" • ");
+    }
     function recomputeInst(s) {
         const inst = s.inst;
         if (!inst) return;
+        if (Array.isArray(inst.amounts) && inst.schedule && inst.amounts.length !== inst.schedule.length) inst.amounts = inst.schedule.map(x => num(x.amount));
         const paidSch = sum(inst.schedule.filter(x => x.paid), x => num(x.paidAmt || x.amount));
         inst.paid = paidSch;
         inst.paidCount = inst.schedule.filter(x => x.paid).length;
@@ -3679,7 +4292,7 @@
         /* التنبيهات */
         const alerts = [];
         overdue.slice(0, 4).forEach(s => alerts.push({ c: "red", i: "⏰", t: "قسط متأخر: " + s.cust, d: s.no + " • " + dueInfo(s).label + " • متبقي " + money(s.inst.remaining), go: "switchSection('tab-installments')" }));
-        list.filter(s => s.inst && !dueInfo(s).overdue && dueInfo(s).due === today).slice(0, 3).forEach(s => alerts.push({ c: "amber", i: "📅", t: "قسط مستحق اليوم: " + s.cust, d: money(s.inst.monthly) + " • فاتورة " + s.no, go: "switchSection('tab-installments')" }));
+        list.filter(s => s.inst && !dueInfo(s).overdue && dueInfo(s).due === today).slice(0, 3).forEach(s => alerts.push({ c: "amber", i: "📅", t: "قسط مستحق اليوم: " + s.cust, d: money(dueInfo(s).amount || s.inst.monthly) + " • فاتورة " + s.no, go: "switchSection('tab-installments')" }));
         low.slice(0, 4).forEach(i => alerts.push({ c: "amber", i: "📦", t: "مخزون واطئ: " + i.name, d: "الرصيد " + digitsMap(i.qty) + " (الحد " + digitsMap(i.min) + ") • " + i.cat, go: "openItemEditor('" + i.id + "')" }));
         warrantyExpiring().slice(0, 3).forEach(w => alerts.push({ c: "blue", i: "🛡️", t: "ضمان يقترب من الانتهاء: " + w.cust, d: w.name + " • تنتهي بعد " + digitsMap(w.daysLeft) + " يوم", go: "switchSection('tab-service');setSvcTab('warranty')" }));
         state.purchases.filter(p => p.total - p.paid > 0).slice(0, 3).forEach(p => alerts.push({ c: "blue", i: "🚚", t: "رصيد مورد مستحق: " + supplierName(p.supplier), d: "فاتورة شراء " + p.id + " • المتبقي " + money(p.total - p.paid), go: "switchSection('tab-purchases')" }));
@@ -3689,10 +4302,10 @@
         $("dash-alerts").innerHTML = alerts.map(a => `<div class="alert-item ${a.c}" onclick="${a.go || ""}"><div class="ai-ico">${a.i}</div><div><b>${esc(a.t)}</b><small>${esc(a.d)}</small></div></div>`).join("");
 
         /* الأقساط المستحقة */
-        const dues = list.filter(s => s.inst && s.inst.remaining > 0).map(s => ({ s, d: dueInfo(s) })).sort((a, b) => (a.d.due || "9999").localeCompare(b.d.due || "9999")).slice(0, 7);
+        const dues = list.filter(s => s.inst && s.inst.remaining > 0).map(s => ({ s, d: dueInfo(s) })).sort((a, b) => byStrongestDebt(a.s, b.s)).slice(0, 7);
         $("dash-dues").innerHTML = dues.length ? dues.map(x => `<div class="alert-item ${x.d.overdue ? "red" : "blue"}" onclick="openPaymentModal('${x.s.no}')">
             <div class="ai-ico">${x.d.overdue ? "⚠️" : "📅"}</div>
-            <div style="flex:1"><b>${esc(x.s.cust)}</b><small>${esc(x.s.no)} • ${money(x.s.inst.monthly)} • ${esc(x.d.label)}</small></div>
+            <div style="flex:1"><b>${esc(x.s.cust)}</b><small>${esc(x.s.no)} • القسط ${money(x.d.amount || x.s.inst.monthly)} • ${esc(x.d.label)}</small></div>
             <span class="badge ${x.d.overdue ? "badge-danger" : "badge-info"}">${money(x.s.inst.remaining)}</span></div>`).join("") : `<div class="empty-state">لا أقساط مستحقة 🎉</div>`;
 
         /* آخر الفواتير */
@@ -3896,61 +4509,98 @@
             onSubmit: makeSubmit(fields, (d) => { Object.assign(c, { price: num(d.price), cost: num(d.cost), qty: Math.max(1, num(d.qty)), serial: d.serial, warranty: d.warranty, name: d.name || c.name }); renderCart(); })
         });
     }
-    function posRecalc() {
+    /* حساب الفاتورة (بدون لمس الـDOM) — يستعمله المحرّك والطباعة */
+    function posBill() {
         const sub = sum(ui.cart, c => c.price * c.qty);
         const disc = Math.min(ui.cartDiscount, sub);
         const tax = Math.round((sub - disc) * num(state.settings.taxRate) / 100);
         const total = roundTo(sub - disc + tax);
         const cost = sum(ui.cart, c => c.cost * c.qty);
-        $("posSubtotal").textContent = money(sub);
-        $("posDiscount").textContent = "(" + money(disc) + ")";
-        $("posTax").textContent = money(tax);
+        return { sub, disc, tax, total, cost };
+    }
+    function posInstPaid() {
+        const method = $("posPayType") ? $("posPayType").value : "cash";
+        const total = posBill().total;
+        const paid = ui.cart.length ? (method === "installment" ? num($("posInstDown").value) : (method === "partial" ? num($("posPaidNow").value) : total)) : 0;
+        return clamp(paid, 0, total);
+    }
+    function posRecalc() {
+        const b = posBill(), total = b.total;
+        $("posSubtotal").textContent = money(b.sub);
+        $("posDiscount").textContent = "(" + money(b.disc) + ")";
+        $("posTax").textContent = money(b.tax);
         $("posTaxRow").style.display = state.settings.taxRate > 0 ? "" : "none";
         $("posTaxPct").textContent = digitsMap(state.settings.taxRate) + "٪";
-        $("posProfit").textContent = money(sub - disc - cost);
+        $("posProfit").textContent = money(b.sub - b.disc - b.cost);
         $("posGrand").textContent = money(total);
         $("posTafqit").textContent = state.settings.showTafqit ? "فقط: " + tafqit(total) + " دينار عراقي لا غير" : "";
         const method = $("posPayType").value;
-        const isInst = method === "installment", isPart = method === "partial";
-        let paid = ui.cart.length ? (isInst ? num($("posInstDown").value) : (isPart ? num($("posPaidNow").value) : total)) : 0;
-        paid = clamp(paid, 0, total);
+        const isInst = method === "installment", isPart = method === "partial", isCred = isInst || isPart;
+        const paid = posInstPaid();
         if (isInst) $("posPaidNow").value = paid;
         if (isPart) $("posInstDown").value = paid;
-        const fee = (isInst || isPart) ? Math.max(0, num($("posInstFeeAmt").value)) : 0;
-        const debt = Math.max(0, total - (isInst || isPart ? paid : total)) + fee;
-        const months = num($("posInstMonths").value) || 1;
-        const monthly = months ? Math.round(debt / months / 250) * 250 : debt;
-        $("posMonthly").textContent = money(monthly);
-        $("posDebt").textContent = money(debt);
-        if ($("posFeeShow")) $("posFeeShow").textContent = money(fee);
-        return { sub, disc, tax, total, cost, fee };
+        const plan = instRender("pos");                       // ← نفس المحرّك الذي يبني العقد لاحقًا
+        const debt = isCred && plan ? plan.debt : Math.max(0, total - (isCred ? paid : total));
+        const monthly = isCred && plan ? plan.monthly : 0;
+        const setTxt = (id, v) => { const el = $(id); if (el) el.textContent = v; };
+        setTxt("posMonthly", isCred ? money(monthly) : money(0));
+        setTxt("posDebt", money(debt));
+        setTxt("posFeeShow", isCred && plan ? money(plan.fee) : money(0));
+        const hint = $("posInstHint");
+        if (hint) hint.innerHTML = isCred && plan ? instShortLine(plan) : "";
+        return { sub: b.sub, disc: b.disc, tax: b.tax, total: total, cost: b.cost, fee: isCred && plan ? plan.fee : 0, plan: plan };
+    }
+    function instShortLine(pl) {
+        if (!pl) return "";
+        const split = instSplitText(pl);
+        return "تأخذ <b>" + instPctTxt(pl.pctOnPrice) + "</b> من السعر (" + money(pl.fee) + ") = <b>" + instPctTxt(pl.pctOnFinanced) + "</b> من المموَّل، وما يعادله <b>" + instPctTxt(pl.yearly) + "</b> سنويًا — الأقساط: " + split;
+    }
+    /* ملخّص شروط العقد — مصدر واحد للعرض في النافذة والطباعة والإكسل */
+    function instTerms(inst) {
+        const fee = Math.max(0, num(inst.fee)), down = Math.max(0, num(inst.down)), debt = Math.max(0, num(inst.debt));
+        const financed = Math.max(0, debt - fee);
+        const price = financed + down;
+        const months = Math.max(1, num(inst.months) || 1);
+        const monthly = num(inst.monthly), last = num(inst.lastAmt) || 0;
+        const groups = (Array.isArray(inst.amounts) && inst.amounts.length ? inst.amounts : []).reduce((g, x) => { const l = g[g.length - 1]; if (l && l.amt === x) l.count++; else g.push({ amt: x, count: 1 }); return g; }, []);
+        return {
+            price: price, down: down, financed: financed, fee: fee, debt: debt, months: months, monthly: monthly, last: last,
+            pctOnPrice: inst.feePct !== undefined ? instR1(inst.feePct) : (price > 0 ? instR1(fee / price * 100) : 0),
+            pctOnFinanced: inst.feePctF !== undefined ? instR1(inst.feePctF) : (financed > 0 ? instR1(fee / financed * 100) : 0),
+            yearly: inst.feeYear !== undefined ? instR1(inst.feeYear) : (financed > 0 ? instR1(fee / financed * 100 * 12 / months) : 0),
+            perMonth: num(inst.perMonth) || (months > 0 ? Math.round(fee / months) : 0),
+            total: Math.round(price + fee),
+            basis: inst.feeBasis || "price",
+            groups: groups.length ? groups : [{ amt: monthly, count: months }],
+            paid: Math.max(0, num(inst.paid)), remaining: Math.max(0, num(inst.remaining))
+        };
+    }
+    function instTermsChips(inst) {
+        if (!inst) return "";
+        const t = instTerms(inst);
+        const tile = (l, v, c, f) => `<div class="stat-tile"><span class="st-label">${l}</span><span class="st-val"${c ? ` style="color:${c}"` : ""}>${v}</span>${f ? `<span class="st-label">${f}</span>` : ""}</div>`;
+        return `<div class="grid g4" style="gap:8px">
+            ${tile("سعر الكاش", money(t.price))}
+            ${tile("المقدمة", money(t.down), "", instPctTxt(t.price > 0 ? t.down / t.price * 100 : 0) + " من السعر")}
+            ${tile("زيادة التقسيط (ربحك)", money(t.fee), "var(--secondary)", instPctTxt(t.pctOnPrice) + " من السعر • " + money(t.perMonth) + " لكل شهر")}
+            ${tile("نسبة على المموَّل", instPctTxt(t.pctOnFinanced), "var(--violet)", "بعد طرح المقدمة — المموَّل " + money(t.financed))}
+            ${tile("ما يعادله سنويًا", instPctTxt(t.yearly), "", "على المبلغ المموَّل")}
+            ${tile("القسط الشهري", money(t.monthly), "", digitsMap(t.months) + " أشهر" + (t.last && t.last !== t.monthly ? " — آخرها " + money(t.last) : ""))}
+            ${tile("إجمالي الدين", money(t.debt), "var(--danger)", "مقدمة + دين = " + money(t.total))}
+            ${tile("توزيع الأقساط", t.groups.length === 1 ? digitsMap(t.groups[0].count) + " × " + money(t.groups[0].amt) : t.groups.map(g => digitsMap(g.count) + "×" + fmt(g.amt)).join(" + "), "", "المجموع يساوي الدين بالضبط")}
+        </div>`;
     }
     function posPayTypeChanged() {
         const v = $("posPayType").value;
         $("posInstBox").style.display = (v === "installment" || v === "partial") ? "" : "none";
-        if ((v === "installment" || v === "partial") && !num($("posInstFeeAmt").value) && !num($("posInstFeePct").value)) {
-            // أول مرة يختار التقسيط: نعبّئ النسبة الافتراضية من الإعدادات تلقائيًا
-            const rate = num(state.settings.instFee);
-            if (rate > 0) $("posInstFeePct").value = rate;
-            posFeePctChanged(true);
+        if ((v === "installment" || v === "partial") && num(state.settings.instFee) > 0 && state.settings.instFeeAuto !== false && !num($("pos_ipFee").value) && !num($("pos_ipPct").value)) {
+            instSetPct("pos", num(state.settings.instFee));   // النسبة الافتراضية من الإعدادات
         }
         posRecalc();
     }
-    // ربط مبلغ الزيادة بنسبتها على الصافي (بمضاعفات الـ250)
-    function roundFee(x) { return Math.round(Math.max(0, num(x)) / 250) * 250; }
-    function posFeePctChanged(silent) {
-        const calc = posRecalc();
-        const fee = roundFee(calc.total * num($("posInstFeePct").value) / 100);
-        if (!silent) $("posInstFeeAmt").value = fee || "";
-        else $("posInstFeeAmt").value = fee;
-        posRecalc();
-    }
-    function posFeeAmtChanged() {
-        const calc = posRecalc();
-        const fee = roundFee($("posInstFeeAmt").value);
-        $("posInstFeePct").value = calc.total > 0 ? (Math.round(fee / calc.total * 1000) / 10) : 0;
-        posRecalc();
-    }
+    /* خلفاء للتحديثات القديمة — كل شيء يمرّ الآن بمحرّك واحد */
+    function posFeePctChanged() { instSetPct("pos", num($("pos_ipPct").value)); }
+    function posFeeAmtChanged() { instEdit("pos", "fee"); }
     function posApplyDiscount() {
         const fields = [{ k: "d", l: "قيمة الخصم", t: "num", min: 0, step: 250, hint: "اتركه 0 لإلغاء الخصم" }];
         showModal({ title: "٪ خصم على الفاتورة", size: "narrow", fields, values: { d: ui.cartDiscount }, actions: [{ label: "إلغاء", cls: "btn-ghost" }, { label: "تطبيق", cls: "btn-primary", act: "submit" }], onSubmit: makeSubmit(fields, (x) => { ui.cartDiscount = Math.max(0, num(x.d)); posRecalc(); toast("تم تطبيق الخصم: " + money(ui.cartDiscount), "ok"); }) });
@@ -4035,8 +4685,10 @@
         sale.total = calc.total; sale.cost = calc.cost; sale.profit = calc.sub - calc.disc - calc.cost;
         sale.vcode = verifyCode(sale.no);
         if (method === "installment" || (method === "partial" && sale.total - sale.pay.paid > 0)) {
-            sale.inst = makeInstallment(sale.total, sale.pay.paid, num($("posInstMonths").value), $("posInstStart").value || addMonths(sale.date, 1), $("posGuarantor").value.trim(), sale.date, num($("posInstFeeAmt").value));
+            sale.inst = makeInstallment(sale.total, sale.pay.paid, num($("posInstMonths").value), $("posInstStart").value || addMonths(sale.date, 1), $("posGuarantor").value.trim(), sale.date, null, calc.plan);
             recomputeInst(sale);
+            const warn = instContractWarnings(sale.inst, sale);
+            if (warn) toast(warn, "warn", 5200);
             if (method === "partial") sale.pay.method = "partial";
         }
         finalizeSale(sale, withPrint);
@@ -4058,8 +4710,9 @@
         ui.cart = []; ui.cartDiscount = 0;
         ["posCustName", "posCustPhone", "posCustAddr", "posNote"].forEach(id => $(id).value = "");
         $("posInstDown").value = 0;
-        if ($("posInstFeeAmt")) $("posInstFeeAmt").value = 0;
-        if ($("posInstFeePct")) $("posInstFeePct").value = 0;
+        if ($("pos_ipFee")) $("pos_ipFee").value = 0;
+        if ($("pos_ipPct")) $("pos_ipPct").value = 0;
+        ui.instMode = ui.instMode || {}; ui.instMode.pos = "fee";
         save(); renderCart(); renderAllViews();
         ui.lastSale = sale.no;
         if (sale.inst && dueInfo(sale).overdue) toast("تنبيه: أول قسط بتاريخ " + fmtDate(sale.inst.schedule[0].due), "warn", 5000);
@@ -4127,30 +4780,19 @@
         $("ss-profit").textContent = money(s - c);
         $("ss-profit").style.color = (s - c) >= 0 ? "var(--secondary)" : "var(--danger)";
         const show = $("ss_paytype").value === "installment";
-        const fee = show ? Math.max(0, num($("inst_feeAmt").value)) : 0;
-        const debt = Math.max(0, s - num($("inst_down").value)) + fee;
-        const mm = Math.max(1, num($("inst_months").value));
-        $("ss-monthly").textContent = show ? money(Math.round(debt / mm / 250) * 250) : "—";
-        $("ss-debt").textContent = show ? money(debt) : "—";
+        const plan = instRender("ss");                       // نفس محرّك الحساب المستعمل في العقد
+        $("ss-monthly").textContent = show && plan ? money(plan.monthly) : "—";
+        $("ss-debt").textContent = show && plan ? money(plan.debt) : "—";
+        if ($("ssInstHint")) $("ssInstHint").innerHTML = show && plan ? instShortLine(plan) : "";
+        return plan;
     }
-    function ssFeePctChanged() {
-        const s = num($("ss_price").value);
-        const fee = roundFee(s * num($("inst_feePct").value) / 100);
-        $("inst_feeAmt").value = fee || "";
-        ssCalc();
-    }
-    function ssFeeAmtChanged() {
-        const s = num($("ss_price").value);
-        const fee = roundFee($("inst_feeAmt").value);
-        $("inst_feePct").value = s > 0 ? (Math.round(fee / s * 1000) / 10) : 0;
-        ssCalc();
-    }
+    function ssFeePctChanged() { instSetPct("ss", num($("ss_ipPct").value)); }
+    function ssFeeAmtChanged() { instEdit("ss", "fee"); }
     function toggleInstBox() {
         const show = $("ss_paytype").value === "installment";
         $("installment_box").style.display = show ? "" : "none";
-        if (show && !num($("inst_feeAmt").value) && !num($("inst_feePct").value)) {
-            const rate = num(state.settings.instFee);
-            if (rate > 0) { $("inst_feePct").value = rate; ssFeePctChanged(); }
+        if (show && num(state.settings.instFee) > 0 && state.settings.instFeeAuto !== false && !num($("ss_ipFee").value) && !num($("ss_ipPct").value)) {
+            instSetPct("ss", num(state.settings.instFee));
         }
         ssCalc();
     }
@@ -4171,21 +4813,26 @@
             no: genInvoiceNo(), date, time: nowTime(), cust, phone: $("ss_phone").value.trim() || "غير مسجل",
             addr: "", cashier: $("ss_cashier").value || state.activeCashier,
             items: [{ invId: $("ss_invItem").value || null, name: model, cat: $("ss_category").value, serial, qty: 1, cost, price: sell, warranty: $("ss_warranty").value }],
-            disc: 0, tax: 0, pay: { method: payType, paid: payType === "installment" ? num($("inst_down").value) : sell }, note: "", status: "ok"
+            disc: 0, tax: 0, pay: { method: payType, paid: payType === "installment" ? num($("ssInstDown").value) : sell }, note: "", status: "ok"
         };
         sale.total = sell; sale.cost = cost; sale.profit = sell - cost;
         sale.vcode = verifyCode(sale.no);
         if (payType === "installment") {
-            const months = num($("inst_months").value) || 1;
-            if (num($("inst_down").value) >= sell) { toast("المقدمة يجب أن تكون أقل من السعر", "err"); return null; }
-            sale.inst = makeInstallment(sell, num($("inst_down").value), months, $("inst_start_date").value || addMonths(date, 1), $("inst_guarantor").value.trim(), date, num($("inst_feeAmt").value));
+            const months = num($("ssInstMonths").value) || 1;
+            if (num($("ssInstDown").value) >= sell) { toast("المقدمة يجب أن تكون أقل من السعر", "err"); return null; }
+            const plS = ssCalc();
+            if (!plS || plS.debt <= 0) { toast("حدّد المقدمة وعدد الأشهر وربح التقسيط من لوحة الأقساط", "err", 4200); return null; }
+            sale.inst = makeInstallment(sell, num($("ssInstDown").value), months, $("ssInstStart").value || addMonths(date, 1), ($("ssInstGuar").value || "").trim(), date, null, plS);
             recomputeInst(sale);
+            const warnS = instContractWarnings(sale.inst, sale);
+            if (warnS) toast(warnS, "warn", 5200);
         }
         finalizeSale(sale, false);
         if (mode === "invoice") { setv("printInvoicePicker", sale.no); loadPrintDocs(sale.no); switchSection("tab-invoice-print"); setTimeout(() => printDoc("invoice"), 260); }
         else if (mode === "warranty") { setv("printWarrantyPicker", sale.no); loadWarrantyDoc(sale.no); switchSection("tab-warranty-print"); }
         $("singleSaleForm").reset();
         $("ss_date").value = date;
+        setv("ssInstStart", addMonths(date, 1));
         populateSelects(); ssCalc(); toggleInstBox(); updateModelHint();
         return sale;
     }
@@ -4613,18 +5260,42 @@
         else if (f === "done") list = list.filter(s => s.inst.remaining <= 0);
         const sort = $("instSort") ? $("instSort").value : "strong";
         list.sort((a, b) => {
-            if (sort === "name") return a.cust.localeCompare(b.cust, "ar");
+            if (sort === "name") return String(a.cust).localeCompare(String(b.cust), "ar");
             if (sort === "debt") return num(b.inst.remaining) - num(a.inst.remaining);
-            if (sort === "strong") {
-                // الأقوى تحصيلاً: المتأخر أولًا، ثم الأعلى متبقياً، ثم الأقرب استحقاقاً
-                const oa = dueInfo(a).overdue ? 1 : 0, ob = dueInfo(b).overdue ? 1 : 0;
-                if (oa !== ob) return ob - oa;
-                const d = num(b.inst.remaining) - num(a.inst.remaining);
-                if (d) return d;
-            }
-            return String(nextDueDate(a) || "9999").localeCompare(String(nextDueDate(b) || "9999"));
+            if (sort === "new") return String(b.date + (b.time || "")).localeCompare(String(a.date + (a.time || "")));
+            if (sort === "due") return String(nextDueDate(a) || "9999").localeCompare(String(nextDueDate(b) || "9999"));
+            return byStrongestDebt(a, b);      // الأقوى دينًا أولًا (الافتراضي)
         });
         return list;
+    }
+    /* ============================================================
+       ترتيب «الأقوى دينًا» — مقياس واحد يُستعمل في كل الشاشات:
+       الأكثر تأخيرًا ← عدد الأقساط الفائتة ← الأعلى متبقيًا ← الأقرب استحقاقًا
+       ============================================================ */
+    function debtStrength(s) {
+        const inst = (s && s.inst) || {};
+        const d = dueInfo(s);
+        const today = todayStr();
+        const missed = (inst.schedule || []).filter(x => !x.paid && x.due && x.due < today).length;
+        return { remaining: Math.max(0, num(inst.remaining)), overdueDays: d.overdue ? num(d.days) : 0, missed: missed, due: d.due || "9999-12-31" };
+    }
+    function byStrongestDebt(a, b) {
+        const A = debtStrength(a), B = debtStrength(b);
+        if (A.overdueDays !== B.overdueDays) return B.overdueDays - A.overdueDays;
+        if (A.missed !== B.missed) return B.missed - A.missed;
+        if (A.remaining !== B.remaining) return B.remaining - A.remaining;
+        return String(A.due).localeCompare(String(B.due));
+    }
+    /* ترتيب العقود القائمة (نفس الترتيب في اللوحة والجداول والطباعة) */
+    function debtRankMap() {
+        const m = {};
+        state.sales.filter(s => s.inst && !isVoid(s) && num(s.inst.remaining) > 0).sort(byStrongestDebt).forEach((s, i) => { m[s.no] = i + 1; });
+        return m;
+    }
+    function debtRankBadge(rank) {
+        if (!rank) return "";
+        const cls = rank === 1 ? "badge-danger" : rank <= 3 ? "badge-warning" : "badge-info";
+        return `<span class="badge ${cls}" title="ترتيب الأولوية في التحصيل (الأقوى دينًا)">⭐ #${digitsMap(rank)}</span> `;
     }
     function renderInstallmentsTable() {
         if (!$("installment_table_rows")) return;
@@ -4637,6 +5308,9 @@
         const totalPaid = sum(all, s => num(s.inst.debt) - num(s.inst.remaining));
         const totalFee = sum(all.filter(s => !isVoid(s)), s => num(s.inst.fee));
         const totalFeePending = sum(all.filter(s => !isVoid(s) && s.inst.remaining > 0), s => num(s.inst.fee));
+        const withFee = all.filter(s => !isVoid(s) && num(s.inst.feePct) > 0);
+        const avgFeePct = withFee.length ? instR1(sum(withFee, s => num(s.inst.feePct)) / withFee.length) : 0;
+        const strongest = all.filter(s => s.inst && !isVoid(s)).sort(byStrongestDebt)[0];
         $("instStats").innerHTML = [
             ["إجمالي الديون القائمة", money(debt), "red", "💳"],
             ["عقود متأخرة", digitsMap(overdue.length) + " عقد", "red", "⏰"],
@@ -4644,23 +5318,27 @@
             ["نسبة التحصيل", digitsMap(totalPlan ? Math.round(totalPaid / totalPlan * 100) : 0) + "٪", "", "📊"],
             ["أرباح التقسيط (كل العقود)", money(totalFee), "green", "📈"],
             ["أرباح التقسيط القائمة", money(totalFeePending), "", "💹"],
+            ["متوسط نسبة الزيادة", digitsMap(avgFeePct) + "٪", "violet", "📐"],
+            ["الأقوى دينًا (أولوية التحصيل)", strongest ? esc(strongest.cust) : "—", strongest ? "red" : "green", "⭐"],
             ["عقود نشطة", digitsMap(all.filter(s => s.inst.status === "active" && s.inst.remaining > 0).length), "", "🟢"],
             ["عقود مسددة", digitsMap(all.filter(s => s.inst.remaining <= 0).length), "green", "🎉"]
         ].map(x => `<div class="kpi ${x[2]}" style="padding:12px"><div class="kpi-label">${x[3]} ${x[0]}</div><div class="kpi-value" style="font-size:1.15rem">${x[1]}</div></div>`).join("");
-        const badge = $("total_debts_badge"); if (badge) badge.textContent = "إجمالي الديون: " + money(debt);
+        const badge = $("total_debts_badge"); if (badge) badge.textContent = "إجمالي الديون: " + money(debt) + (strongest ? " — الأقسى: " + strongest.cust : "");
 
+        const ranks = debtRankMap();
         $("installment_table_rows").innerHTML = list.map(s => {
             const inst = s.inst, d = dueInfo(s);
             const pct = inst.debt > 0 ? clamp(Math.round((num(inst.debt) - num(inst.remaining)) / inst.debt * 100), 0, 100) : 100;
             const cls = isVoid(s) ? "row-danger" : (d.overdue ? "row-danger" : (inst.remaining <= 0 ? "row-paid" : ""));
+            const rk = ranks[s.no];
             return `<tr class="${cls}">
-                <td><div class="cell-title">${esc(s.cust)}</div><div class="muted">${esc(s.phone || "")}</div>
+                <td><div class="cell-title">${debtRankBadge(rk)}${esc(s.cust)}</div><div class="muted">${esc(s.phone || "")}</div>
                     ${telLink(s.phone) ? `<a class="btn btn-xs btn-ghost" style="text-decoration:none" href="${telLink(s.phone)}" target="_blank" rel="noopener">💬 واتساب</a>` : ""}</td>
                 <td><span class="badge badge-info">${esc(s.no)}</span><div class="muted">${fmtDate(s.date)}</div></td>
                 <td><div>${(s.items || []).map(i => esc(i.name)).join(" + ")}</div><div class="muted">${(s.items || []).map(i => esc(i.serial || "")).join(", ")}</div></td>
                 <td class="num">${money(saleTotal(s))}<div class="muted">مقدمة ${money(inst.down)}</div>${num(inst.fee) ? `<div class="muted" style="color:var(--secondary)">زيادة ${money(inst.fee)} (${digitsMap(inst.feePct || 0)}٪)</div>` : ""}</td>
                 <td class="num strong" style="color:${inst.remaining > 0 ? "var(--danger)" : "var(--secondary)"}">${money(inst.remaining)}<div class="muted">من ${money(inst.debt)}</div></td>
-                <td class="num">${money(inst.monthly)}<div class="muted">${digitsMap(inst.paidCount)}/${digitsMap(inst.months)} قسط</div></td>
+                <td class="num">${money(inst.monthly)}<div class="muted">القادم ${money(d.amount || inst.monthly)} • ${digitsMap(inst.paidCount)}/${digitsMap(inst.months)} قسط</div></td>
                 <td style="min-width:120px"><div class="progress-track"><div class="progress-fill ${pct > 75 ? "" : pct > 35 ? "warn" : "danger"}" style="width:${pct}%"></div></div><div class="muted">${digitsMap(pct)}٪</div></td>
                 <td class="num">${d.due ? fmtDate(d.due) + '<div class="badge ' + (d.overdue ? "badge-danger" : "badge-warning") + '">' + esc(d.label) + "</div>" : '<span class="badge badge-success">مكتمل</span>'}</td>
                 <td class="muted">${esc(inst.guarantor || "—")}</td>
@@ -4684,13 +5362,13 @@
         save(); renderInstallmentsTable(); toast("تم تحديث حالة العقد", "ok");
     }
     function openQuickPayment() {
-        const debtors = state.sales.filter(s => s.inst && s.inst.remaining > 0 && !isVoid(s));
+        const debtors = state.sales.filter(s => s.inst && s.inst.remaining > 0 && !isVoid(s)).sort(byStrongestDebt);
         if (!debtors.length) return toast("لا توجد عقود عليها ديون ✅", "info");
         if (debtors.length === 1) return openPaymentModal(debtors[0].no);
         showModal({
             title: "💰 اختر العقد لاستلام القسط", size: "wide",
             top: `<div class="table-responsive"><table><thead><tr><th>العقد</th><th>الزبون</th><th>المتبقي</th><th>القسط</th><th>الحالة</th><th></th></tr></thead><tbody>` +
-                debtors.map(s => `<tr class="${dueInfo(s).overdue ? "row-danger" : ""}"><td>${esc(s.no)}</td><td>${esc(s.cust)}</td><td class="num">${money(s.inst.remaining)}</td><td class="num">${money(s.inst.monthly)}</td><td>${esc(dueInfo(s).label)}</td><td><button class="btn btn-xs btn-secondary" onclick="closeModal('modal-dynamic');openPaymentModal('${s.no}')">استلام</button></td></tr>`).join("") +
+                debtors.map(s => `<tr class="${dueInfo(s).overdue ? "row-danger" : ""}"><td>${esc(s.no)}</td><td>${esc(s.cust)}</td><td class="num">${money(s.inst.remaining)}</td><td class="num">${money(dueInfo(s).amount || s.inst.monthly)}</td><td>${esc(dueInfo(s).label)}</td><td><button class="btn btn-xs btn-secondary" onclick="closeModal('modal-dynamic');openPaymentModal('${s.no}')">استلام</button></td></tr>`).join("") +
                 `</tbody></table></div>`,
             actions: [{ label: "إغلاق", cls: "btn-ghost" }]
         });
@@ -4700,7 +5378,7 @@
         const s = state.sales.find(x => x.no === no); if (!s || !s.inst) return;
         const inst = s.inst;
         const fields = [
-            { k: "amt", l: "المبلغ المستلم", t: "num", min: 0, step: 250, hint: "القسط الشهري: " + fmt(inst.monthly) },
+            { k: "amt", l: "المبلغ المستلم", t: "num", min: 0, step: 250, hint: "القسط الشهري " + fmt(inst.monthly) + " — والمستحق الآن " + fmt(dueInfo(s).amount || inst.monthly) + (dueInfo(s).n ? " (رقم " + dueInfo(s).n + ")" : "") },
             { k: "date", l: "تاريخ الاستلام", t: "date" },
             { k: "method", l: "طريقة الاستلام", t: "select", options: [{ v: "cash", l: "نقد بالكاشير" }, { v: "transfer", l: "حوالة/ماستر" }, { v: "card", l: "بطاقة" }] },
             { k: "note", l: "ملاحظة", wide: true, ph: "مثال: سدد قسط شهر أيلول" }
@@ -4710,9 +5388,9 @@
             top: `<div class="grid g4" style="margin-bottom:6px">
                 <div class="stat-tile"><span class="st-label">إجمالي الدين</span><span class="st-val">${money(inst.debt)}</span></div>
                 <div class="stat-tile"><span class="st-label">المتبقي</span><span class="st-val" style="color:var(--danger)">${money(inst.remaining)}</span></div>
-                <div class="stat-tile"><span class="st-label">القسط القادم</span><span class="st-val" style="color:var(--primary)">${money(inst.monthly)}</span></div>
+                <div class="stat-tile"><span class="st-label">القسط القادم</span><span class="st-val" style="color:var(--primary)">${money(dueInfo(s).amount || inst.monthly)}</span><span class="st-label">${esc(dueInfo(s).label)}</span></div>
                 <div class="stat-tile"><span class="st-label">الأقساط المسددة</span><span class="st-val">${digitsMap(inst.paidCount)}/${digitsMap(inst.months)}</span></div></div>`,
-            fields, values: { amt: Math.min(inst.monthly, inst.remaining), date: todayStr(), method: "cash" },
+            fields, values: { amt: Math.min(dueInfo(s).amount || inst.monthly, inst.remaining), date: todayStr(), method: "cash" },
             actions: [
                 { label: "إلغاء", cls: "btn-ghost" },
                 { label: "✅ استلام الدفعة", cls: "btn-secondary", act: "submit" }
@@ -4750,13 +5428,13 @@
             <td class="muted">${esc(x.note || "")}</td></tr>`).join("");
         showModal({
             title: "📅 جدول الأقساط — " + esc(s.cust), size: "wide",
-            top: `<div class="grid g4">
-                <div class="stat-tile"><span class="st-label">إجمالي الدين</span><span class="st-val">${money(inst.debt)}</span></div>
-                <div class="stat-tile"><span class="st-label">المسدّد</span><span class="st-val" style="color:var(--secondary)">${money(inst.paid)}</span></div>
-                <div class="stat-tile"><span class="st-label">المتبقي</span><span class="st-val" style="color:var(--danger)">${money(inst.remaining)}</span></div>
-                <div class="stat-tile"><span class="st-label">الزيادة/الربح</span><span class="st-val" style="font-size:1rem;color:var(--secondary)">${money(inst.fee || 0)} <small>(${digitsMap(inst.feePct || 0)}٪)</small></span></div>
-                <div class="stat-tile"><span class="st-label">الكفيل</span><span class="st-val" style="font-size:.9rem">${esc(inst.guarantor || "—")}</span></div></div></div>
-                <div class="table-responsive" style="margin-top:10px;max-height:44vh;overflow:auto"><table><thead><tr><th>#</th><th>الاستحقاق</th><th>المبلغ</th><th>الحالة</th><th></th><th>ملاحظة</th></tr></thead><tbody>${rows}</tbody></table></div>
+            top: `<div style="margin-bottom:10px">${instTermsChips(inst)}
+                <div class="grid g3" style="gap:8px;margin-top:8px">
+                    <div class="stat-tile"><span class="st-label">المسدّد حتى الآن</span><span class="st-val" style="color:var(--secondary)">${money(inst.paid)}</span><span class="st-label">${digitsMap(inst.paidCount || 0)} قسط من ${digitsMap(inst.months)}</span></div>
+                    <div class="stat-tile"><span class="st-label">المتبقي</span><span class="st-val" style="color:var(--danger)">${money(inst.remaining)}</span><span class="st-label">${esc(dueInfo(s).label)}</span></div>
+                    <div class="stat-tile"><span class="st-label">الكفيل</span><span class="st-val" style="font-size:.9rem">${esc(inst.guarantor || "—")}</span><span class="st-label">الحالة: ${esc(instStatusText(s))}</span></div>
+                </div></div>
+                <div class="table-responsive table-scroll-6" style="margin-top:10px"><table><thead><tr><th>#</th><th>الاستحقاق</th><th>المبلغ</th><th>الحالة</th><th></th><th>ملاحظة</th></tr></thead><tbody>${rows}</tbody></table></div>
                 <div style="margin-top:8px"><div class="muted">سجل الدفعات:</div><div class="payments-timeline" style="margin-top:4px">${inst.payments.map(p => `<span class="badge badge-success" style="margin:2px">${fmtDate(p.date)} • ${money(p.amount)} • ${esc(p.note || "")}</span>`).join("") || '<span class="muted">لا دفعات بعد</span>'}</div></div>`,
             actions: [{ label: "إغلاق", cls: "btn-ghost" }, { label: "🖨️ طباعة الجدول", cls: "btn-primary", js: "closeModal('modal-dynamic');printStatement('" + no + "')" }]
         });
@@ -4779,7 +5457,7 @@
         const s = state.sales.find(x => x.no === no); if (!s) return;
         const link = telLink(s.phone);
         const d = dueInfo(s);
-        const txt = `السلام عليكم ${s.cust} 🌹\nمعرض ${state.settings.storeName}\n\nتذكير لطيف بخصوص أقساط الفاتورة ${s.no}:\n• القسط القادم: ${money(s.inst.monthly)}\n• تاريخ الاستحقاق: ${fmtDate(d.due)} (${d.label})\n• إجمالي المتبقي: ${money(s.inst.remaining)}\n\nللاستفسار: ${state.settings.phone}\nشكراً لتعاونكم 🙏`;
+        const txt = `السلام عليكم ${s.cust} 🌹\nمعرض ${state.settings.storeName}\n\nتذكير لطيف بخصوص أقساط الفاتورة ${s.no}:\n• القسط القادم (${d.n ? "رقم " + d.n : "الشهري"}): ${money(d.amount || s.inst.monthly)}\n• تاريخ الاستحقاق: ${fmtDate(d.due)} (${d.label})\n• إجمالي المتبقي: ${money(s.inst.remaining)}\n\nللاستفسار: ${state.settings.phone}\nشكراً لتعاونكم 🙏`;
         if (!link) {
             navigator.clipboard && navigator.clipboard.writeText(txt).then(() => toast("لا يوجد رقم هاتف — تم نسخ نص التذكير 📋", "ok"));
             return showModal({ title: "💬 نص التذكير", size: "wide", top: `<textarea rows="9" style="font-weight:700">${esc(txt)}</textarea>`, actions: [{ label: "إغلاق", cls: "btn-ghost" }] });
@@ -4790,7 +5468,7 @@
         const s = state.sales.find(x => x.no === no); if (!s || !s.inst) return;
         const inst = s.inst;
         const html = `<div class="receipt-paper mode-a4">${docHead("كشف حساب أقساط", s.no)}
-            <div class="rp-meta"><div>الزبون: <strong>${esc(s.cust)}</strong></div><div>الهاتف: <strong>${esc(s.phone || "—")}</strong></div><div>الجهاز: <strong>${(s.items || []).map(i => esc(i.name)).join(" + ")}</strong></div><div>الكفيل: <strong>${esc(inst.guarantor || "—")}</strong></div><div>سعر الكاش: <strong>${money(saleTotal(s))}</strong></div><div>المقدمة: <strong>${money(inst.down)}</strong></div>${num(inst.fee) ? `<div>ربح التقسيط: <strong>${money(inst.fee)} (${digitsMap(inst.feePct || 0)}٪)</strong></div>` : ""}<div>إجمالي دين الأقساط: <strong>${money(inst.debt)}</strong></div></div>
+            <div class="rp-meta"><div>الزبون: <strong>${esc(s.cust)}</strong></div><div>الهاتف: <strong>${esc(s.phone || "—")}</strong></div><div>الجهاز: <strong>${(s.items || []).map(i => esc(i.name)).join(" + ")}</strong></div><div>الكفيل: <strong>${esc(inst.guarantor || "—")}</strong></div><div>سعر الكاش: <strong>${money(saleTotal(s))}</strong></div><div>المقدمة: <strong>${money(inst.down)}</strong></div><div>زيادة التقسيط: <strong>${money(instTerms(inst).fee)} = ${instPctTxt(instTerms(inst).pctOnPrice)} من السعر</strong></div><div>نسبة على المموَّل: <strong>${instPctTxt(instTerms(inst).pctOnFinanced)}</strong></div><div>ما يعادله سنويًا: <strong>${instPctTxt(instTerms(inst).yearly)}</strong></div><div>القسط: <strong>${money(inst.monthly)} × ${digitsMap(inst.months)}</strong></div><div>إجمالي دين الأقساط: <strong>${money(inst.debt)}</strong></div><div>إجمالي ما يدفعه الزبون: <strong>${money(instTerms(inst).total)}</strong></div></div>
             <table class="rp-table"><thead><tr><th>رقم القسط</th><th>تاريخ الاستحقاق</th><th>المبلغ</th><th>الحالة</th><th>ملاحظة</th></tr></thead><tbody>
             ${inst.schedule.map(x => `<tr><td>${digitsMap(x.n)}</td><td>${fmtDate(x.due)}</td><td>${money(x.amount)}</td><td>${x.paid ? "مسدد ✓" : "مفتوح"}</td><td>${esc(x.note || "")}</td></tr>`).join("")}
             </tbody><tfoot><tr><td colspan="2">الإجمالي</td><td>${money(inst.debt)}</td><td colspan="2">المتبقي: <b>${money(inst.remaining)}</b></td></tr></tfoot></table>
@@ -4812,11 +5490,11 @@
         toast("العقد مسدد بالكامل — تم تجهيز براءة الذمة 🎉", "ok", 5000);
     }
     function printDueList() {
-        const rows = state.sales.filter(s => s.inst && s.inst.remaining > 0 && !isVoid(s)).map(s => ({ s, d: dueInfo(s) })).sort((a, b) => String(a.d.due).localeCompare(String(b.d.due)));
-        const html = `<div class="receipt-paper mode-a4">${docHead("قائمة الأقساط المستحقة", fmtDate(todayStr()))}
-            <table class="rp-table"><thead><tr><th>الزبون</th><th>الهاتف</th><th>الفاتورة</th><th>الاستحقاق</th><th>القسط</th><th>المتبقي</th><th>الحالة</th></tr></thead><tbody>
-            ${rows.map(x => `<tr><td>${esc(x.s.cust)}</td><td>${esc(x.s.phone)}</td><td>${esc(x.s.no)}</td><td>${fmtDate(x.d.due)}</td><td>${money(x.s.inst.monthly)}</td><td><b>${money(x.s.inst.remaining)}</b></td><td>${x.d.overdue ? "متأخر ⚠️" : esc(x.d.label)}</td></tr>`).join("")}
-            </tbody><tfoot><tr><td colspan="5">إجمالي المتبقي</td><td>${money(sum(rows, r => r.s.inst.remaining))}</td><td>${digitsMap(rows.length)} عقد</td></tr></tfoot></table>
+        const rows = state.sales.filter(s => s.inst && s.inst.remaining > 0 && !isVoid(s)).map(s => ({ s, d: dueInfo(s) })).sort((a, b) => byStrongestDebt(a.s, b.s));
+        const html = `<div class="receipt-paper mode-a4">${docHead("قائمة الأقساط المستحقة — الأقوى دينًا أولًا", fmtDate(todayStr()))}
+            <table class="rp-table"><thead><tr><th>#</th><th>الزبون</th><th>الهاتف</th><th>الفاتورة</th><th>الاستحقاق</th><th>القسط</th><th>المتبقي</th><th>الحالة</th></tr></thead><tbody>
+            ${rows.map((x, i) => `<tr${i === 0 ? ' style="font-weight:800"' : ""}><td>${digitsMap(i + 1)}</td><td>${esc(x.s.cust)}</td><td>${esc(x.s.phone)}</td><td>${esc(x.s.no)}</td><td>${fmtDate(x.d.due)}</td><td>${money(x.d.amount || x.s.inst.monthly)}</td><td><b>${money(x.s.inst.remaining)}</b></td><td>${x.d.overdue ? "متأخر ⚠️" : esc(x.d.label)}</td></tr>`).join("")}
+            </tbody><tfoot><tr><td colspan="6">إجمالي المتبقي</td><td>${money(sum(rows, r => r.s.inst.remaining))}</td><td>${digitsMap(rows.length)} عقد</td></tr></tfoot></table>
             <div class="rp-foot">قائمة داخلية — نظام ${esc(state.settings.storeName)}</div></div>`;
         printHTML(html, { title: "قائمة الأقساط" });
     }
@@ -4828,14 +5506,19 @@
         const map = {};
         activeSales().forEach(s => {
             const k = s.cust;
-            if (!map[k]) map[k] = { name: k, phone: s.phone, addr: s.addr || (state.customers[k] || {}).addr || "", count: 0, total: 0, debt: 0, last: "", black: (state.customers[k] || {}).black, note: (state.customers[k] || {}).note };
+            if (!map[k]) map[k] = { name: k, phone: s.phone, addr: s.addr || (state.customers[k] || {}).addr || "", count: 0, total: 0, debt: 0, last: "", black: (state.customers[k] || {}).black, note: (state.customers[k] || {}).note, overdue: 0, lateDays: 0, contracts: 0 };
             map[k].count++; map[k].total += saleTotal(s);
+            if (s.inst && !isVoid(s)) {
+                map[k].contracts++;
+                const di = dueInfo(s);
+                if (di.overdue) { map[k].overdue++; map[k].lateDays = Math.max(map[k].lateDays, num(di.days)); }
+            }
             map[k].debt += saleDebt(s);
             if (!map[k].last || s.date > map[k].last) map[k].last = s.date;
             if (s.phone && s.phone !== "غير مسجل") map[k].phone = s.phone;
         });
-        Object.entries(state.customers).forEach(([name, c]) => { if (!map[name]) map[name] = { name, phone: c.phone, addr: c.addr, count: 0, total: 0, debt: 0, last: "", black: c.black, note: c.note }; });
-        return Object.values(map).sort((a, b) => b.total - a.total);
+        Object.entries(state.customers).forEach(([name, c]) => { if (!map[name]) map[name] = { name, phone: c.phone, addr: c.addr, count: 0, total: 0, debt: 0, last: "", black: c.black, note: c.note, overdue: 0, lateDays: 0, contracts: 0 }; });
+        return Object.values(map);
     }
     function renderCustomerList() {
         if (!$("customerRows")) return;
@@ -4845,10 +5528,16 @@
         if (q) list = list.filter(c => (c.name + " " + (c.phone || "")).toLowerCase().includes(q));
         if (f === "debt") list = list.filter(c => c.debt > 0);
         if (f === "black") list = list.filter(c => c.black);
-        if (f === "vip") list = list.filter(c => c.count >= 2).sort((a, b) => b.total - a.total);
+        if (f === "overdue") list = list.filter(c => c.overdue > 0);
+        if (f === "vip") list = list.filter(c => c.count >= 2);
+        const sort = $("custSort") ? $("custSort").value : "debt";
+        if (sort === "total") list.sort((a, b) => b.total - a.total);
+        else if (sort === "name") list.sort((a, b) => String(a.name).localeCompare(String(b.name), "ar"));
+        else if (sort === "last") list.sort((a, b) => String(b.last).localeCompare(String(a.last)));
+        else list.sort((a, b) => (b.overdue - a.overdue) || (b.lateDays - a.lateDays) || (b.debt - a.debt) || (b.total - a.total));  // الأقوى دينًا
         $("custCount").textContent = digitsMap(list.length) + " زبون";
         $("customerRows").innerHTML = list.map(c => `<tr class="${c.black ? "row-danger" : c.debt > 0 ? "row-warn" : ""}" onclick="openCustomerProfile('${jsq(c.name)}')" style="cursor:pointer">
-            <td><div class="cell-title">${esc(c.name)} ${c.black ? '<span class="badge badge-danger">قائمة سوداء</span>' : ""}</div><div class="muted">${esc(c.addr || "")}</div></td>
+            <td><div class="cell-title">${esc(c.name)} ${c.black ? '<span class="badge badge-danger">قائمة سوداء</span>' : ""}${c.overdue ? ` <span class="badge badge-warning">متأخر ${digitsMap(c.overdue)}</span>` : ""}</div><div class="muted">${esc(c.addr || "")}</div></td>
             <td class="num">${esc(c.phone || "—")}</td>
             <td class="num">${digitsMap(c.count)}</td>
             <td class="num strong">${money(c.total)}</td>
@@ -4897,7 +5586,7 @@
                     <span class="badge ${s.inst.remaining <= 0 ? "badge-success" : d.overdue ? "badge-danger" : "badge-info"}">${esc(instStatusText(s))}</span></div>
                     <div class="muted">${(s.items || []).map(i => esc(i.name)).join(" + ")}</div>
                     <div class="progress-track" style="margin:6px 0"><div class="progress-fill ${pct > 75 ? "" : pct > 35 ? "warn" : "danger"}" style="width:${pct}%"></div></div>
-                    <div style="display:flex;justify-content:space-between;font-size:.78rem" class="num"><span>المتبقي: <b style="color:var(--danger)">${money(s.inst.remaining)}</b></span><span>القسط: ${money(s.inst.monthly)} • ${esc(d.label)}</span></div>
+                    <div style="display:flex;justify-content:space-between;font-size:.78rem" class="num"><span>المتبقي: <b style="color:var(--danger)">${money(s.inst.remaining)}</b></span><span>القسط: ${money(d.amount || s.inst.monthly)} • ${esc(d.label)}</span></div>
                     <div class="row-actions" style="margin-top:6px"><button class="btn btn-xs btn-secondary" onclick="openPaymentModal('${s.no}')">💵 استلام</button><button class="btn btn-xs btn-ghost" onclick="openScheduleModal('${s.no}')">📅 الجدول</button><button class="btn btn-xs btn-ghost" onclick="printStatement('${s.no}')">🖨️ كشف</button></div>
                     ${s.inst.payments && s.inst.payments.length ? `<div class="payments-timeline">${s.inst.payments.slice(-6).map(p => `<span class="badge badge-success" style="margin:2px">${fmtDate(p.date)}: ${money(p.amount)}</span>`).join("")}</div>` : ""}</div>`; }).join("")}</div>` : ""}
             <b style="font-size:.85rem">🧾 سجل المشتريات</b>
@@ -4952,8 +5641,19 @@
             <div class="rp-sign"><div class="sg">توقيع الزبون</div><div class="sg">المحاسب</div><div class="sg">ختم المعرض</div></div></div>`;
         printHTML(html, { title: "كشف حساب " + name });
     }
-    function exportCustomersExcel() { exportTableExcel("الزبائن", ["الاسم", "الهاتف", "العنوان", "عدد الفواتير", "إجمالي الشراء", "الدين المتبقي", "قائمة سوداء", "ملاحظة"], customerStatsList().map(c => [c.name, c.phone, c.addr, c.count, c.total, c.debt, c.black ? "نعم" : "لا", c.note || ""]), "customers"); }
-    function exportSalesExcel() { exportTableExcel("الفواتير", exportDataset("sales").headers, exportDataset("sales").rows, "invoices"); }
+    function exportCustomersExcel() {
+        const list = customerStatsList().slice().sort((a, b) => (b.overdue - a.overdue) || (b.debt - a.debt) || (b.total - a.total));
+        exportTableExcel("الزبائن", ["الاسم", "الهاتف", "العنوان", "عدد الفواتير", "إجمالي الشراء", "الدين المتبقي", "عقود متأخرة", "أكثر تأخير (يوم)", "قائمة سوداء", "ملاحظة"],
+            list.map(c => [c.name, c.phone, c.addr, c.count, Math.round(c.total), Math.round(c.debt), c.overdue || 0, c.lateDays || 0, c.black ? "نعم" : "لا", c.note || ""]),
+            "customers",
+            { summary: [["عدد الزبائن", list.length], ["إجمالي المبيعات", Math.round(sum(list, c => c.total))], ["إجمالي الديون", Math.round(sum(list, c => c.debt))], ["زبائن متعثرون", list.filter(c => c.overdue > 0).length], ["في القائمة السوداء", list.filter(c => c.black).length]] });
+    }
+    function exportSalesExcel() {
+        const set = exportDataset("sales");
+        exportTableExcel("الفواتير", set.headers, set.rows, "invoices", {
+            summary: [["عدد الفواتير", set.rows.length], ["إجمالي الصافي", Math.round(sum(set.rows, r => num(r[5])))], ["إجمالي الربح", Math.round(sum(set.rows, r => num(r[6])))], ["إجمالي الديون المتبقية", Math.round(sum(set.rows, r => num(r[8])))]]
+        });
+    }
     </script>
 
     <script>
@@ -5471,7 +6171,18 @@
         exportTableExcel("تقرير مبيعات " + $("repFrom").value + " → " + $("repTo").value,
             ["الفاتورة", "التاريخ", "الزبون", "الكاشير", "القسم", "الأصناف", "الصافي", "الكلفة", "الربح", "طريقة الدفع", "المتبقي"],
             list.map(s => [s.no, s.date, s.cust, s.cashier, uniq((s.items || []).map(i => i.cat)).join("|"), (s.items || []).map(i => i.name + "×" + i.qty).join(" | "), saleTotal(s), saleCost(s), saleProfit(s), payLabel(s.pay.method), saleDebt(s)]),
-            "report");
+            "report",
+            {
+                summary: [
+                    ["الفترة", $("repFrom").value + " → " + $("repTo").value],
+                    ["عدد الفواتير", list.length],
+                    ["إجمالي المبيعات", Math.round(sum(list, saleTotal))],
+                    ["إجمالي الكلفة", Math.round(sum(list, saleCost))],
+                    ["إجمالي الربح", Math.round(sum(list, saleProfit))],
+                    ["الديون المتبقية", Math.round(sum(list, saleDebt))],
+                    ["متوسط الفاتورة", Math.round(list.length ? sum(list, saleTotal) / list.length : 0)]
+                ]
+            });
     }
     function printReport() {
         const list = reportSales(), tot = sum(list, saleTotal), prof = sum(list, saleProfit);
@@ -5579,9 +6290,32 @@
                 s.date = d.date || s.date; s.cust = d.cust || s.cust; s.phone = d.phone || s.phone; s.cashier = d.cashier;
                 s.disc = num(d.disc); s.pay.paid = num(d.paid); s.note = d.note;
                 s.total = saleTotal(s); s.cost = saleCost(s); s.profit = saleProfit(s);
-                if (s.inst) { s.inst.debt = Math.max(0, s.total - s.inst.down); recomputeInst(s); }
+                let fixNote = "";
+                if (s.inst) {
+                    const i0 = s.inst;
+                    const plan = instCompute({
+                        price: s.total, net: s.total, down: num(i0.down), months: (i0.schedule || []).length || num(i0.months),
+                        fee: num(i0.fee), feeMode: "fee", basis: i0.feeBasis || instBasis(),
+                        step: i0.roundStep === undefined ? instRoundStep() : num(i0.roundStep),
+                        monthlyMode: i0.monthlyMode || state.settings.instMonthlyMode || "even"
+                    });
+                    const prevPaid = {};
+                    (i0.schedule || []).forEach(x => { if (x.paid) prevPaid[x.due] = { amt: num(x.paidAmt || x.amount), date: x.paidDate || "" }; });
+                    i0.fee = plan.fee; i0.feePct = plan.pctOnPrice; i0.feePctF = plan.pctOnFinanced; i0.feeYear = plan.yearly; i0.perMonth = plan.perMonth;
+                    i0.debt = plan.debt; i0.months = plan.months; i0.monthly = plan.monthly; i0.lastAmt = plan.last;
+                    i0.amounts = (plan.amounts || []).slice(); i0.feeBasis = plan.basis; i0.roundStep = plan.step; i0.monthlyMode = plan.monthlyMode;
+                    i0.schedule = buildSchedule(i0);
+                    i0.schedule.forEach(e => {
+                        const p2 = prevPaid[e.due];
+                        if (p2) { e.paid = true; e.paidAmt = Math.min(p2.amt, e.amount); e.paidDate = p2.date; e.note = e.amount > p2.amt ? "مسدد جزئيًا قبل التعديل" : ""; }
+                    });
+                    recomputeInst(s);
+                    const expectPaid = Math.round(num(i0.down) + num(i0.paid));
+                    if (Math.abs(num(s.pay.paid) - expectPaid) > 1) { s.pay.paid = expectPaid; fixNote = " وصحّحنا المدفوع ليطابق جدول الأقساط (" + money(expectPaid) + ")"; }
+                    fixNote = " وأُعيد بناء جدول الأقساط بنسبة " + instPctTxt(i0.feePct) + (fixNote || "") + "";
+                }
                 logAct("تعديل فاتورة", s.no + " • " + s.cust);
-                save(); renderAllViews(); toast("تم تحديث الفاتورة — تحقّق من الأرقام ✅", "ok");
+                save(); renderAllViews(); toast("تم تحديث الفاتورة" + fixNote + " ✅", "ok", 5000);
             })
         });
     }
@@ -5703,7 +6437,7 @@
                 ${tax ? `<div class="tl"><span>ضريبة ${digitsMap(S.taxRate)}٪</span><b>${money(tax)}</b></div>` : ""}
                 <div class="tl grand"><span>الصافي</span><span>${money(saleTotal(s))}</span></div>
                 ${s.inst ? `<div class="tl"><span>مدفوع / مقدمة</span><b>${money(s.inst.down)}</b></div>
-                ${num(s.inst.fee) ? `<div class="tl"><span>ربح التقسيط (${digitsMap(s.inst.feePct || 0)}٪)</span><b>${money(s.inst.fee)}</b></div>` : ""}
+                ${num(s.inst.fee) ? `<div class="tl"><span>زيادة التقسيط (${instPctTxt(instTerms(s.inst).pctOnPrice)} من السعر${num(s.inst.feePctF) ? " • " + instPctTxt(s.inst.feePctF) + " من المموَّل" : ""})</span><b>${money(s.inst.fee)}</b></div>` : ""}
                 <div class="tl"><span>إجمالي دين الأقساط</span><b>${money(s.inst.debt)}</b></div>
                 <div class="tl"><span>الدين المتبقي</span><b style="color:#dc2626">${money(s.inst.remaining)}</b></div>
                 <div class="tl"><span>القسط الشهري</span><b>${money(s.inst.monthly)} × ${digitsMap(s.inst.months)}</b></div>`
@@ -5770,7 +6504,7 @@
         const s = currentDocSale(); if (!s) return;
         const link = telLink(s.phone);
         if (!link) return toast("لا يوجد رقم هاتف صالح لهذه الفاتورة", "err");
-        const txt = `${s.cust} المحترم 🌹\n${state.settings.storeName}\n\nفاتورة ${s.no} — ${fmtDate(s.date)}\n${(s.items || []).map(i => "• " + i.name + " ×" + i.qty + " : " + money(i.price * i.qty)).join("\n")}\nالصافي: ${money(saleTotal(s))}\n${s.inst ? "المتبقي: " + money(s.inst.remaining) + " • القسط: " + money(s.inst.monthly) + "\n" : ""}رمز التحقق: ${s.vcode}\nشكراً لثقتكم 🙏`;
+        const txt = `${s.cust} المحترم 🌹\n${state.settings.storeName}\n\nفاتورة ${s.no} — ${fmtDate(s.date)}\n${(s.items || []).map(i => "• " + i.name + " ×" + i.qty + " : " + money(i.price * i.qty)).join("\n")}\nالصافي: ${money(saleTotal(s))}\n${s.inst ? "المتبقي: " + money(s.inst.remaining) + " • القسط القادم: " + money(dueInfo(s).amount || s.inst.monthly) + "\n" : ""}رمز التحقق: ${s.vcode}\nشكراً لثقتكم 🙏`;
         window.open(link + "?text=" + encodeURIComponent(txt), "_blank");
     }
 
@@ -5936,11 +6670,29 @@
        34) كشف إكسل شامل للأقساط
        ============================================================ */
     function exportMasterInstallmentsExcel() {
-        const rows = state.sales.filter(s => s.inst);
+        const rows = state.sales.filter(s => s.inst).sort(byStrongestDebt);
+        const act = rows.filter(s => !isVoid(s));
+        const q = (x) => instTerms(x.inst);
         exportTableExcel("الكشف الشامل للأقساط والديون",
-                ["العقد", "الفاتورة", "التاريخ", "الزبون", "الهاتف", "العنوان", "الأجهزة", "السيريالات", "إجمالي الفاتورة", "المقدمة", "زيادة التقسيط", "النسبة٪", "إجمالي الدين", "المتبقي", "القسط الشهري", "عدد الأشهر", "المسددة", "أول استحقاق", "آخر استحقاق", "الكفيل", "الحالة", "الكاشير"],
-            rows.map(s => { const i = s.inst; return [i.id || "", s.no, s.date, s.cust, s.phone, s.addr || "", (s.items || []).map(x => x.name).join(" + "), (s.items || []).map(x => x.serial).join(" | "), saleTotal(s), i.down, i.fee || 0, i.feePct || 0, i.debt, i.remaining, i.monthly, i.months, i.paidCount, i.schedule.length ? i.schedule[0].due : "", i.schedule.length ? i.schedule[i.schedule.length - 1].due : "", i.guarantor || "", instStatusText(s), s.cashier]; }),
-            "installments-master");
+                ["الأولوية", "العقد", "الفاتورة", "التاريخ", "الزبون", "الهاتف", "العنوان", "الأجهزة", "السيريالات", "سعر الكاش", "المقدمة", "زيادة التقسيط", "النسبة٪ من السعر", "النسبة٪ من المموَّل", "ما يعادلها سنويًا٪", "الزيادة لكل شهر", "إجمالي الدين", "المتبقي", "المحصّل", "القسط الشهري", "عدد الأشهر", "عدد المسددة", "أول استحقاق", "آخر استحقاق", "الكفيل", "الحالة", "الكاشير"],
+            rows.map((x, r) => { const i = x.inst, t = q(x); return [r + 1, i.id || "", x.no, x.date, x.cust, x.phone, x.addr || "", (x.items || []).map(y => y.name).join(" + "), (x.items || []).map(y => y.serial).join(" | "), t.price, t.down, t.fee, t.pctOnPrice, t.pctOnFinanced, t.yearly, t.perMonth, t.debt, num(i.remaining), num(i.paid), t.monthly, t.months, num(i.paidCount), i.schedule && i.schedule.length ? i.schedule[0].due : "", i.schedule && i.schedule.length ? i.schedule[i.schedule.length - 1].due : "", i.guarantor || "", instStatusText(x), x.cashier]; }),
+            "installments-master",
+            {
+                sheetName: "الأقساط",
+                summary: [
+                    ["عدد العقود", rows.length],
+                    ["عقود نشطة", act.filter(x => num(x.inst.remaining) > 0).length],
+                    ["عقود متأخرة", act.filter(x => dueInfo(x).overdue).length],
+                    ["إجمالي أسعار الكاش", Math.round(sum(act, saleTotal))],
+                    ["إجمالي المقدمات", Math.round(sum(act, x => num(x.inst.down)))],
+                    ["إجمالي أرباح التقسيط", Math.round(sum(act, x => num(x.inst.fee)))],
+                    ["إجمالي الديون (كل العقود)", Math.round(sum(act, x => num(x.inst.debt)))],
+                    ["المتبقي للتحصيل", Math.round(sum(act, x => num(x.inst.remaining)))],
+                    ["المحصّل من الأقساط", Math.round(sum(act, x => num(x.inst.paid)))],
+                    ["متوسط نسبة الزيادة ٪", act.length ? instR1(sum(act, x => num(x.inst.feePct)) / act.length * 10) / 10 : 0]
+                ],
+                notes: ["ملف Excel حقيقي بصيغة xlsx — الأعمدة الرقمية أرقام حقيقية يمكن جمعها وتصفيتها.", "الترتيب: الأقوى دينًا أولًا (الأكثر تأخيرًا ثم الأعلى متبقيًا).", "النسبة من السعر = الزيادة ÷ صافي الفاتورة • النسبة من المموَّل = الزيادة ÷ (الصافي - المقدمة)."]
+            });
         logAct("تصدير كشف الأقساط", rows.length + " عقد");
     }
 
@@ -5950,24 +6702,64 @@
     function openPricingTool() {
         const fields = [
             { k: "cost", l: "كلفة الصنف", t: "num", step: 250 },
-            { k: "target", l: "الهامش المطلوب ٪", t: "num", step: 1 },
+            { k: "target", l: "الربح المطلوب ٪ على الكلفة", t: "num", step: 1, hint: "80,000 كلفة + 25٪ = سعر 100,000" },
             { k: "round", l: "التقريب", t: "select", options: [{ v: "0", l: "بدون" }, { v: "250", l: "250" }, { v: "500", l: "500" }, { v: "1000", l: "1000" }, { v: "5000", l: "5000" }] },
-            { k: "installment", l: "عدد أشهر التقسيط (لحساب القسط)", t: "num", min: 0 }
+            { k: "installment", l: "عدد أشهر التقسيط (0 = بدون أقساط)", t: "num", min: 0 },
+            { k: "feePct", l: "ربح التقسيط ٪ على السعر", t: "num", step: 0.5 },
+            { k: "downPct", l: "المقدمة ٪ من السعر", t: "num", step: 5 }
         ];
+        const render = (d, price) => {
+            const cost = num(d.cost);
+            const months = Math.max(0, num(d.installment));
+            const r = num(d.round);
+            let html = `<div class="calc-preview-bar"><div><span class="lbl">السعر المقترح</span><div class="val">${money(price)}</div></div>
+                <div><span class="lbl">الربح للوحدة (كاش)</span><div class="val" style="color:var(--secondary)">${money(price - cost)}</div></div>
+                <div><span class="lbl">هامش الربح من السعر</span><div class="val">${price > 0 ? instPctTxt(instR1((price - cost) / price * 100)) : "—"}</div></div>
+                <div><span class="lbl">نسبته على الكلفة</span><div class="val">${cost > 0 ? instPctTxt(instR1((price - cost) / cost * 100)) : "—"}</div></div></div>`;
+            if (months > 0 && price > 0) {
+                const down = Math.round(price * Math.min(95, Math.max(0, num(d.downPct))) / 100);
+                const fee = Math.round(price * Math.max(0, num(d.feePct)) / 100);
+                const pl = instCompute({ price: price, net: price, down: down, months: months, fee: fee, feeMode: "fee", basis: "price", step: r });
+                html += `<div class="calc-preview-bar" style="margin-top:8px">
+                    <div><span class="lbl">زيادة التقسيط</span><div class="val">${money(pl.fee)}</div></div>
+                    <div><span class="lbl">القسط الشهري</span><div class="val">${instSplitText(pl)}</div></div>
+                    <div><span class="lbl">إجمالي الدين</span><div class="val">${money(pl.debt)}</div></div></div>
+                    <div class="calc-preview-bar" style="margin-top:8px">
+                    <div><span class="lbl">نسبة الزيادة على السعر</span><div class="val">${instPctTxt(pl.pctOnPrice)}</div></div>
+                    <div><span class="lbl">على المموَّل</span><div class="val">${instPctTxt(pl.pctOnFinanced)}</div></div>
+                    <div><span class="lbl">ما يعادلها سنويًا</span><div class="val">${instPctTxt(pl.yearly)}</div></div>
+                    <div><span class="lbl">الزائد على الكاش</span><div class="val">${money(pl.fee)}</div></div></div>`;
+            }
+            return html;
+        };
         showModal({
-            title: "🧮 حاسبة التسعير والأقساط", size: "narrow", fields, values: { target: 20, round: "250", installment: 6 },
+            title: "🧮 حاسبة التسعير والأقساط", size: "narrow", fields,
+            values: { target: 20, round: "250", installment: 12, feePct: num(state.settings.instFee) || 0, downPct: 0 },
             actions: [{ label: "إغلاق", cls: "btn-ghost" }, { label: "احسب", cls: "btn-primary", act: "submit" }],
             onSubmit: makeSubmit(fields, (d) => {
                 const cost = num(d.cost), pct = num(d.target);
                 let price = cost * (1 + pct / 100);
                 const r = num(d.round); if (r) price = Math.round(price / r) * r;
-                const monthly = num(d.installment) > 0 ? price / num(d.installment) : 0;
-                $("dynamicBody").insertAdjacentHTML("beforeend", `<div class="calc-preview-bar"><div><span class="lbl">السعر المقترح</span><div class="val">${money(price)}</div></div>
-                    <div><span class="lbl">الربح للوحدة</span><div class="val" style="color:var(--secondary)">${money(price - cost)}</div></div>
-                    ${monthly ? `<div><span class="lbl">القسط الشهري</span><div class="val">${money(monthly)}</div></div>` : ""}</div>
-                    <button class="btn btn-sm btn-secondary" onclick="const b=$('ss_cost');">📋 انسخ السعر يدويًا: ${Math.round(price)}</button>`);
+                price = Math.max(0, Math.round(price));
+                const box = $("dynamicBody");
+                if (!box) return;
+                box.querySelector(".pt-result")?.remove();
+                box.insertAdjacentHTML("beforeend", `<div class="pt-result" style="margin-top:10px">${render(d, price)}
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+                        <button class="btn btn-sm btn-secondary" onclick="pricingToolUse(${price},${cost})">✅ استعمله في البيع السريع</button>
+                        <button class="btn btn-sm btn-ghost" onclick="navigator.clipboard && navigator.clipboard.writeText(String(${price}));toast('انسخ السعر ${fmt(price)}','ok')">📋 انسخ السعر</button>
+                    </div></div>`);
             })
         });
+    }
+    /* يأخذ نتيجة حاسبة التسعير إلى نموذج البيع السريع مباشرة */
+    function pricingToolUse(price, cost) {
+        closeModal("modal-dynamic");
+        switchSection("tab-sale-single");
+        setv("ss_price", price); setv("ss_cost", cost);
+        ssCalc();
+        toast("تم وضع السعر والكلفة في نموذج البيع السريع — أكمل بيانات الزبون", "ok");
+        const t = $("ss_name"); if (t) t.focus();
     }
 
     /* ============================================================

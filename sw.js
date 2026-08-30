@@ -1,5 +1,5 @@
 /* Service Worker — يخزّن النظام ليعمل بدون إنترنت (يُستخدم فقط عند تشغيل الموقع عبر خادم محلي أو استضافة) */
-const CACHE = 'mst-pos-v3.1';
+const CACHE = 'mst-pos-v3.2';
 const ASSETS = ['./', './index.html', './manifest.webmanifest', './icon.svg'];
 
 self.addEventListener('install', (e) => {

@@ -1,0 +1,57 @@
+/* ============================================================
+   5) الطباعة — مستندات جاهزة للطبع (A4 / A5 / حراري)
+   ============================================================ */
+#print-host{ display:none; }
+.doc{
+  --doc-accent:#172033; color:#111; background:#fff; font-family:var(--font);
+  font-size:12.5px; line-height:1.6; padding:14px 16px; -webkit-print-color-adjust:exact; print-color-adjust:exact;
+}
+.doc *{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+.doc.size-A4{ width:210mm; min-height:296mm; }
+.doc.size-A5{ width:148mm; min-height:209mm; font-size:11.5px; }
+.doc.size-T80{ width:80mm; font-size:10.5px; padding:6px 5px; }
+.doc.size-T58{ width:58mm; font-size:9.5px; padding:5px 4px; }
+.doc-h{ display:flex; align-items:flex-start; gap:12px; padding-bottom:9px; border-bottom:2.5px solid var(--doc-accent); margin-bottom:11px; }
+.doc-h .dh-logo{ width:58px; height:58px; border-radius:11px; overflow:hidden; background:#f1f4f9; display:grid; place-items:center; flex:0 0 auto; }
+.doc-h .dh-logo img{ width:100%; height:100%; object-fit:cover; }
+.doc-h h2{ font-size:1.35em; margin:0 0 2px; color:var(--doc-accent); }
+.doc-h .dh-m{ font-size:.88em; color:#444; line-height:1.55; }
+.doc-h .dh-side{ margin-inline-start:auto; text-align:end; }
+.doc-title{ font-size:1.12em; font-weight:900; text-align:center; padding:5px; border:1.5px dashed #c9d1de; border-radius:8px; margin-bottom:10px; letter-spacing:.02em; }
+.doc-meta{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:6px 16px; margin-bottom:10px; font-size:.94em; }
+.doc-meta div{ display:flex; gap:6px; }
+.doc-meta b{ color:#333; min-width:78px; font-weight:800; }
+table.doc-tbl{ width:100%; border-collapse:collapse; margin:8px 0; font-size:.96em; }
+table.doc-tbl th{ background:var(--doc-accent); color:#fff; padding:6px 7px; text-align:start; font-weight:800; font-size:.9em; border:1px solid var(--doc-accent); }
+table.doc-tbl td{ padding:5.5px 7px; border:1px solid #d6dde8; }
+table.doc-tbl tr:nth-child(even) td{ background:#f7f9fc; }
+table.doc-tbl td.n,table.doc-tbl th.n{ text-align:end; }
+table.doc-tbl tfoot td{ background:#eef2f8; font-weight:800; }
+.doc-tot{ margin-inline-start:auto; width:min(300px,100%); margin-top:8px; }
+.doc-tot div{ display:flex; justify-content:space-between; padding:4px 8px; border-bottom:1px dashed #dbe2ec; }
+.doc-tot div.grand{ background:var(--doc-accent); color:#fff; font-weight:900; font-size:1.1em; border-radius:7px; border:0; margin-top:5px; }
+.doc-words{ margin-top:10px; padding:8px 10px; background:#f4f7fb; border:1px solid #dfe6f0; border-radius:8px; font-size:.92em; font-weight:700; }
+.doc-note{ margin-top:10px; font-size:.88em; color:#555; }
+.doc-f{ margin-top:16px; display:flex; align-items:flex-end; gap:16px; font-size:.88em; }
+.doc-f .sign{ flex:1 1 auto; border-top:1px solid #333; padding-top:5px; text-align:center; color:#444; }
+.doc-qr{ display:flex; gap:10px; align-items:center; margin-top:10px; }
+.doc-barcode{ margin-top:8px; }
+.doc-terms{ margin-top:10px; padding:8px 10px; border:1px dashed #cfd8e5; border-radius:8px; font-size:.84em; color:#555; }
+.doc-center{ text-align:center; }
+.doc-thermal .doc-meta{ grid-template-columns:1fr; }
+.doc-thermal table.doc-tbl th,.doc-thermal table.doc-tbl td{ padding:4px 5px; }
+.doc-thermal .doc-tot{ width:100%; }
+.doc-thermal .doc-h .dh-logo{ width:44px; height:44px; }
+.doc-stamp{ position:absolute; inset-inline-end:26px; bottom:74px; width:104px; height:104px; border:3px double var(--doc-accent); border-radius:50%; display:grid; place-items:center; color:var(--doc-accent); font-weight:900; font-size:.78em; text-align:center; opacity:.55; transform:rotate(-11deg); }
+.doc-page-break{ break-after:page; page-break-after:always; }
+.preview-frame{ background:#e9edf3; padding:18px; border-radius:14px; overflow:auto; max-height:min(64dvh,760px); }
+.preview-frame .doc{ margin:0 auto 14px; box-shadow:0 8px 30px -12px rgba(16,24,40,.4); }
+@media print{
+  html,body{ background:#fff !important; }
+  body > *:not(#print-host){ display:none !important; }
+  #print-host{ display:block !important; position:static !important; }
+  #print-host .doc{ margin:0; box-shadow:none !important; width:auto !important; min-height:0 !important; padding:0 !important; }
+  #print-host .doc.size-T80,#print-host .doc.size-T58{ padding:0 !important; }
+  .no-print{ display:none !important; }
+  @page{ margin:10mm; }
+}

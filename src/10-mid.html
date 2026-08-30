@@ -1,0 +1,86 @@
+</style>
+</head>
+<body>
+<!-- ============ شاشة الدخول ============ -->
+<div id="login" class="login-wrap" hidden>
+  <div class="login-card">
+    <div class="center" style="flex-direction:column;gap:12px;margin-bottom:18px">
+      <div class="brand-logo" style="width:60px;height:60px;border-radius:19px" id="loginLogo"></div>
+      <div class="mid">
+        <h1 id="loginStore" style="font-size:22px">بيتي</h1>
+        <div class="muted small">نظام إدارة محلات المواد المنزلية</div>
+      </div>
+    </div>
+    <form id="loginForm" class="col" style="gap:12px">
+      <div class="field">
+        <label for="loginUser">المستخدم</label>
+        <input class="input" id="loginUser" autocomplete="username" required placeholder="اسم المستخدم">
+      </div>
+      <div class="field">
+        <label for="loginPass">كلمة المرور</label>
+        <input class="input" id="loginPass" type="password" autocomplete="current-password" required placeholder="••••">
+      </div>
+      <div id="loginErr" class="hint-box danger hide"></div>
+      <button class="btn primary lg block" type="submit">🔓 دخول</button>
+      <div class="note-box tiny" id="loginHint">
+        أول تشغيل: المستخدم <b>admin</b> وكلمة المرور <b>1234</b> — يُنصح بتغييرها فوراً من <b>الإدارة ← الأمان</b>.
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ============ التطبيق ============ -->
+<div class="app" id="app" hidden>
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="brand-logo" id="sideLogo"></div>
+      <div class="brand-txt">
+        <strong id="sideStore">بيتي</strong>
+        <span id="sideBranch">المقر الرئيسي</span>
+      </div>
+      <button class="btn ghost icon sm x" id="sideClose" style="display:none;color:#fff" title="إغلاق">✕</button>
+    </div>
+    <nav class="nav" id="nav"></nav>
+    <div class="side-foot">
+      <button class="side-user" id="sideUser">
+        <div class="avatar" id="sideAvatar">A</div>
+        <div class="grow" style="min-width:0">
+          <div class="bold ellip" id="sideUserName" style="font-size:.88em">المدير</div>
+          <div class="tiny dim ellip" id="sideUserRole">admin</div>
+        </div>
+        <span class="dim">⋯</span>
+      </button>
+    </div>
+  </aside>
+  <div class="scrim" id="scrim"></div>
+
+  <div class="main">
+    <header class="topbar">
+      <button class="tb-btn tb-menu-btn" id="menuBtn" title="القائمة">☰</button>
+      <div class="search" id="gsWrap">
+        <span class="s-ic">🔍</span>
+        <input id="gs" type="search" placeholder="بحث سريع عن زبون، فاتورة، سلعة، باركود…" autocomplete="off">
+        <kbd class="only-desktop">Ctrl K</kbd>
+        <div class="search-results" id="gsResults" hidden></div>
+      </div>
+      <div class="spacer only-mobile"></div>
+      <div class="row gap-8">
+        <button class="tb-btn only-desktop" id="branchBtn" title="الفرع">🏪</button>
+        <button class="tb-btn" id="alertsBtn" title="التنبيهات">🔔<span class="badge-dot" id="alertsDot" hidden>0</span></button>
+        <button class="tb-btn only-desktop" id="themeBtn" title="الوضع الليلي">🌙</button>
+        <button class="tb-btn" id="posBtn" title="بيع جديد" style="background:var(--accent);color:#fff;border-color:var(--accent)">🛒</button>
+      </div>
+    </header>
+    <main class="content" id="view" tabindex="-1"></main>
+  </div>
+
+  <nav class="mobilenav" id="mobilenav"></nav>
+</div>
+
+<!-- عناصر عامة -->
+<div class="modal-root" id="modalRoot"><div class="modal-scrim" data-close></div><div id="modalSlot"></div></div>
+<div class="dd-root" id="ddRoot"><div class="dd" id="ddSlot"></div></div>
+<div class="toasts" id="toasts"></div>
+<div id="print-host" aria-hidden="true"></div>
+<style id="page-style"></style>
+<script>

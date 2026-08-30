@@ -1,15 +1,16 @@
 {
-  "name": "معرض المصطفى للأجهزة المنزلية — نظام الإدارة",
-  "short_name": "نظام المعرض",
-  "description": "نظام شامل لإدارة معارض الأجهزة المنزلية: نقاط بيع، مخزون، أقساط، ضمان وصيانة، خزينة وتقارير — يعمل بدون إنترنت.",
+  "name": "بيتي — نظام إدارة محلات المواد المنزلية",
+  "short_name": "بيتي POS",
+  "description": "نظام متكامل لإدارة محل المواد والأجهزة المنزلية: مبيعات نقدية وتقسيط، مخزون، أقساط، تسديدات، ضمان، صيانة، توصيل، مشتريات، مصاريف، صندوق، تقارير، Excel وطباعة — يعمل بدون إنترنت.",
   "lang": "ar",
   "dir": "rtl",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone"],
   "orientation": "any",
-  "background_color": "#0f172a",
-  "theme_color": "#1e3a8a",
+  "background_color": "#F5F7FA",
+  "theme_color": "#172033",
   "categories": ["business", "productivity", "finance"],
   "icons": [
     {
@@ -20,8 +21,9 @@
     }
   ],
   "shortcuts": [
-    { "name": "فاتورة بيع جديدة", "url": "./index.html#tab-pos", "icons": [{ "src": "icon.svg", "sizes": "any" }] },
-    { "name": "الأقساط والديون", "url": "./index.html#tab-installments", "icons": [{ "src": "icon.svg", "sizes": "any" }] },
-    { "name": "التقارير", "url": "./index.html#tab-reports", "icons": [{ "src": "icon.svg", "sizes": "any" }] }
+    { "name": "نقطة البيع", "url": "./index.html#/pos", "icons": [{ "src": "icon.svg", "sizes": "any" }] },
+    { "name": "الأقساط", "url": "./index.html#/installments", "icons": [{ "src": "icon.svg", "sizes": "any" }] },
+    { "name": "الصندوق", "url": "./index.html#/cashbox", "icons": [{ "src": "icon.svg", "sizes": "any" }] },
+    { "name": "التقارير", "url": "./index.html#/reports", "icons": [{ "src": "icon.svg", "sizes": "any" }] }
   ]
 }
